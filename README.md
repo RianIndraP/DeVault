@@ -17,9 +17,19 @@
 -->
 
 ## Cara Menjalankan
-<!-- Tulis langkah menjalankan project. Untuk project vanilla cukup:
-1. Buka file `index.html` di browser.
--->
+
+Project memakai ES module (`type="module"`) dan memuat halaman via `fetch`, jadi WAJIB dijalankan lewat server lokal (tidak bisa dibuka langsung dengan double-click).
+
+1. Buka terminal di folder project ini (`DeVault/DeVault`).
+2. Jalankan server lokal:
+
+   ```bash
+   npx serve
+   ```
+
+3. Buka `http://localhost:3000` di browser.
+
+> Alternatif: `npm run build` dulu untuk menghasilkan CSS (Tailwind), lalu gunakan Live Server VS Code atau `python -m http.server 8080`.
 
 ## Teknologi
 <!-- Tulis teknologi yang dipakai. Contoh: HTML, CSS, JavaScript (vanilla). -->

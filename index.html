@@ -1,13 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="id">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevVault</title>
-    <link rel="stylesheet" href="styles/index.css">
-    <script type="module" src="firebase.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DevVault - Penyimpan Rahasia</title>
+    <link rel="stylesheet" href="./styles/output.css" />
+    <!-- Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
-    
+    <nav>
+        <button class="cursor-pointer font-bold hover:underline"
+            onclick="SwitchPage('pages/dashboard.html')">Dashboard</button>
+        <button class="cursor-pointer font-bold hover:underline"
+            onclick="SwitchPage('pages/settings.html')">Settings</button>
+    </nav>
+
+    <div id="app">
+        <p>Memuat Konten...</p>
+    </div>
+
+    <script src="./scripts/script.js"></script>
 </body>
+
 </html>
