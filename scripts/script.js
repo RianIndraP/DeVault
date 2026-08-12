@@ -27,3 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     SwitchPage('pages/dashboard.html');
 });
 
+document.addEventListener('mousemove', (e) => {
+    const glow = document.getElementById('cursor-grid');
+    if (glow) {
+        glow.style.setProperty('--x', e.clientX + 'px');
+        glow.style.setProperty('--y', e.clientY + 'px');
+    }
+});
