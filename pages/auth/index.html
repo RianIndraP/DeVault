@@ -14,7 +14,9 @@
         <!-- Halaman folder auth akan di muat disini -->
     </main>
 
-    <script src="/scripts/script.js"></script>
+    <script type="module" src="/scripts/script.js">
+        import { auth, db } from "/firebase.js";
+    </script>
 </body>
 
 </html>

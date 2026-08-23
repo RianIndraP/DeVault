@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.3.3",
+    "firebase": "^12.18.0",
     "tailwindcss": "^4.3.3"
   }
 }
