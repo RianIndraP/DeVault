@@ -16,9 +16,9 @@ Aplikasi web manajemen keuangan pribadi berbasis JavaScript. Membantu pengguna m
 ### Backend & Data
 | Teknologi | Fungsi | Status |
 |-----------|--------|--------|
-| Supabase | Authentication, PostgreSQL database, RLS, Storage | 🔄 Belum |
-| Supabase Auth | Register, Login, Logout, Reset Password | 🔄 Belum |
-| PostgreSQL | Penyimpanan data dengan Row Level Security | 🔄 Belum |
+| Supabase | Authentication, PostgreSQL database, RLS, Storage | ✅ Selesai |
+| Supabase Auth | Register, Login, Logout, Reset Password | ✅ Selesai |
+| PostgreSQL | Penyimpanan data dengan Row Level Security | ✅ Selesai |
 
 ### Libraries
 | Teknologi | Versi | Fungsi | Status |
@@ -35,8 +35,8 @@ personal-finance-dashboard/
 ├── index.html              ← File utama HTML (entry point)
 ├── package.json            ← Dependency & script commands
 ├── vite.config.js          ← Konfigurasi Vite (port, plugin Tailwind)
-├── .env.example            ← Template variabel environment (Supabase)
-├── .env                    ← Environment variables (isi sendiri)
+├── .env                    ← Environment variables (Supabase credentials)
+├── .env.example            ← Template variabel environment
 ├── .gitignore              ← File yang tidak di-commit ke Git
 ├── public/                 ← File statis (favicon, gambar)
 └── src/
@@ -63,8 +63,8 @@ personal-finance-dashboard/
         │   ├── reports.js
         │   └── settings.js
         ├── services/       ← Layanan API & integrasi
-        │   ├── supabase.js     ← Client Supabase
-        │   ├── auth.js         ← Layanan autentikasi
+        │   ├── supabase.js     ← Client Supabase (createClient)
+        │   ├── auth.js         ← Layanan autentikasi (register, login, logout, getSession)
         │   ├── transaction.js  ← CRUD transaksi
         │   ├── account.js      ← CRUD akun
         │   ├── category.js     ← CRUD kategori
@@ -83,21 +83,26 @@ personal-finance-dashboard/
 ### Prasyarat
 - **Node.js** versi 18 atau lebih tinggi
 - **npm** (tersedia otomatis saat install Node.js)
+- **Akun Supabase** — [https://supabase.com](https://supabase.com)
 
 ### Instalasi
 ```bash
 # 1. Install dependency
 npm install
 
-# 2. Jalankan dev server
+# 2. Isi file .env dengan Supabase credentials
+#    VITE_SUPABASE_URL=https://your-project.supabase.co
+#    VITE_SUPABASE_ANON_KEY=your-anon-key
+
+# 3. Jalankan dev server
 npm run dev
 
-# 3. Buka browser ke http://localhost:5173
+# 4. Buka browser ke http://localhost:5173
 
-# 4. Build untuk produksi
+# 5. Build untuk produksi
 npm run build
 
-# 5. Preview build produksi
+# 6. Preview build produksi
 npm run preview
 ```
 
@@ -115,21 +120,27 @@ File konfigurasi:
 - `tailwind.config.js` — **tidak diperlukan**
 
 ## Konfigurasi Supabase
-*(Belum dikerjakan - Nomor 3)*
 
+### Prasyarat (Dilakukan di luar kode)
 1. Buat akun di [https://supabase.com](https://supabase.com)
 2. Buat project baru
 3. Buka **Settings > API**
-4. Salin **URL** dan **anon key**
+4. Salin **Project URL** dan **anon key**
+
+### Konfigurasi di Project
 5. Buat file `.env` di root project:
 ```env
-VITE_SUPABASE_URL=your-supabase-project-url
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
-6. Tambahkan script tag Supabase CDN di `index.html`:
-```html
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-```
+6. `.env` sudah ada di `.gitignore` — tidak akan di-commit ke Git
+7. `src/js/services/supabase.js` — client Supabase menggunakan `@supabase/supabase-js` npm package
+8. `src/js/services/auth.js` — layanan autentikasi: `register`, `login`, `logout`, `getSession`, `onAuthStateChange`
+
+### Verifikasi
+- Buka browser ke `http://localhost:5173`
+- Jika terhubung, halaman menampilkan: **"✅ Supabase terhubung. Belum ada user login."** (berwarna hijau)
+- Jika gagal, pesan: **"⚠️ Supabase belum dikonfigurasi. Cek file .env"** (berwarna merah)
 
 ## Fitur yang Direncanakan
 
@@ -147,14 +158,18 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 - Tidak perlu `tailwind.config.js` atau `postcss.config.js`
 - Styling responsive: `bg-gray-50`, `flex`, `font-bold`, `text-gray-800`, dll.
 
-### Nomor 3: Setup Supabase 🔄 Belum
-- Install `@supabase/supabase-js` via CDN atau npm
+### Nomor 3: Setup Supabase ✅
+- Install `@supabase/supabase-js` via npm
 - Buat akun di supabase.com
 - Buat project, dapatkan URL dan anon key
 - Konfigurasi `.env`
+- `src/js/services/supabase.js` — client Supabase dengan `createClient`
+- `src/js/services/auth.js` — authentication service (register, login, logout, getSession)
+- `src/main.js` — menampilkan status koneksi Supabase di halaman
+- **Terverifikasi**: halaman menampilkan "✅ Supabase terhubung"
 
 ### Nomor 4-18: Fitur Lainnya 🔲 Belum
-- Authentication (Register, Login, Logout)
+- Authentication (Register, Login, Logout) — **layanan dasar sudah ada di auth.js**
 - Database + RLS (PostgreSQL)
 - Layout Dashboard
 - Accounts, Categories, Transactions
@@ -214,6 +229,7 @@ Semua tabel memiliki kolom `user_id` dan menggunakan **Row Level Security (RLS)*
 - Authentication via Supabase
 - Tidak meminta data rekening bank
 - File receipt terisolasi per user
+- `.env` tidak di-commit ke Git
 
 ## Metrik Sukses MVP
 - Jumlah pengguna aktif
@@ -248,3 +264,7 @@ Proprietary - Personal Use
 - Tailwind v4 menggunakan `@import "tailwindcss"` di CSS, bukan `@tailwind` directives
 - Tidak ada `tailwind.config.js` atau `postcss.config.js` di project ini
 - File CSS Tailwind diproses oleh `@tailwindcss/vite` plugin di Vite
+- Supabase client menggunakan `@supabase/supabase-js` npm package, bukan CDN
+- `supabase.auth.getSession()` untuk mengecek session pengguna
+- `supabase.auth.onAuthStateChange()` untuk mendeteksi perubahan auth state
+- `authService` module mengekspose: `register`, `login`, `logout`, `getCurrentUser`, `updateProfile`, `onAuthStateChange`
