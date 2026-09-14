@@ -1,4 +1,6 @@
 import { transactionService } from '../services/database.js';
+import { accountService } from '../services/database.js';
+import { categoryService } from '../services/database.js';
 
 export const transactionsPage = {
   async render() {
@@ -50,11 +52,11 @@ export const transactionsPage = {
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Akun</label>
-                <select id="tx-account" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">Pilih akun...</option></select>
+                <select id="tx-account" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">Memuat...</option></select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                <select id="tx-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">Pilih kategori...</option></select>
+                <select id="tx-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">Memuat...</option></select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
@@ -78,7 +80,21 @@ export const transactionsPage = {
       </div>
     `;
     this.attachEvents();
+    await this.loadAccountsAndCategories();
     await this.loadData();
+  },
+
+  async loadAccountsAndCategories() {
+    const { data: accounts } = await accountService.getAll();
+    const { data: categories } = await categoryService.getAll();
+    const accountSelect = document.getElementById('tx-account');
+    const categorySelect = document.getElementById('tx-category');
+    if (accountSelect && accounts) {
+      accountSelect.innerHTML = '<option value="">Pilih akun...</option>' + accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    }
+    if (categorySelect && categories) {
+      categorySelect.innerHTML = '<option value="">Pilih kategori...</option>' + categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    }
   },
 
   async loadData() {
@@ -86,11 +102,14 @@ export const transactionsPage = {
     const tbody = document.getElementById('transaction-table-body');
     if (error || !data) { tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Gagal memuat</td></tr>'; return; }
     if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-400">Tidak ada transaksi</td></tr>'; return; }
+    const { data: categories } = await categoryService.getAll();
+    const catMap = {};
+    (categories || []).forEach(c => { catMap[c.id] = c.name; });
     tbody.innerHTML = data.map(t => `
       <tr class="hover:bg-gray-50">
         <td class="px-6 py-4 text-sm">${new Date(t.date).toLocaleDateString('id-ID')}</td>
         <td class="px-6 py-4 text-sm">${t.description || '-'}</td>
-        <td class="px-6 py-4 text-sm">${t.category_id || '-'}</td>
+        <td class="px-6 py-4 text-sm">${catMap[t.category_id] || t.category_id || '-'}</td>
         <td class="px-6 py-4 text-sm font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">Rp ${Number(t.amount).toLocaleString('id-ID')}</td>
         <td class="px-6 py-4 text-sm">
           <button class="text-blue-600 hover:underline edit-tx" data-id="${t.id}">Edit</button>
@@ -105,12 +124,26 @@ export const transactionsPage = {
     const form = document.getElementById('transaction-form');
     const addBtn = document.getElementById('btn-add-transaction');
     const cancelBtn = document.getElementById('btn-cancel-modal');
-
-    if (addBtn) addBtn.addEventListener('click', () => { document.getElementById('modal-title').textContent = 'Tambah Transaksi'; modal.classList.remove('hidden'); });
+    if (addBtn) addBtn.addEventListener('click', () => { document.getElementById('modal-title').textContent = 'Tambah Transaksi'; document.getElementById('tx-id').value = ''; modal.classList.remove('hidden'); });
     if (cancelBtn) cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
     if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
     if (form) form.addEventListener('submit', async (e) => { e.preventDefault(); await this.save(); });
-    document.querySelectorAll('.delete-tx').forEach(btn => btn.addEventListener('click', async () => { await this.delete(btn.dataset.id); }));
+    document.querySelectorAll('.delete-tx').forEach(btn => btn.addEventListener('click', async () => { if (confirm('Hapus transaksi ini?')) { const { error } = await transactionService.delete(btn.dataset.id); if (!error) await this.loadData(); } }));
+    document.querySelectorAll('.edit-tx').forEach(btn => btn.addEventListener('click', async () => {
+      const { data } = await transactionService.getAll();
+      const tx = (data || []).find(t => t.id === btn.dataset.id);
+      if (tx) {
+        document.getElementById('modal-title').textContent = 'Edit Transaksi';
+        document.getElementById('tx-id').value = tx.id;
+        document.getElementById('tx-type').value = tx.type;
+        document.getElementById('tx-account').value = tx.account_id || '';
+        document.getElementById('tx-category').value = tx.category_id || '';
+        document.getElementById('tx-date').value = tx.date;
+        document.getElementById('tx-desc').value = tx.description || '';
+        document.getElementById('tx-amount').value = tx.amount;
+        modal.classList.remove('hidden');
+      }
+    }));
   },
 
   async save() {
@@ -125,11 +158,5 @@ export const transactionsPage = {
     const id = document.getElementById('tx-id').value;
     const { error } = id ? await transactionService.update(id, data) : await transactionService.create(data);
     if (!error) { document.getElementById('transaction-modal').classList.add('hidden'); await this.loadData(); }
-  },
-
-  async delete(id) {
-    if (!confirm('Hapus transaksi ini?')) return;
-    const { error } = await transactionService.delete(id);
-    if (!error) await this.loadData();
   }
 };
