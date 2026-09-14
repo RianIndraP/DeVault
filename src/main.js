@@ -1,38 +1,22 @@
 import './index.css';
 import { supabase } from './js/services/supabase.js';
 import { authService } from './js/services/auth.js';
+import { app } from './js/app.js';
 
-const app = document.getElementById('app');
-app.innerHTML = `
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center">
-    <div class="text-center">
-      <h1 class="text-3xl font-bold text-gray-800 mb-2">Personal Finance Dashboard</h1>
-      <p class="text-gray-500 mb-2">Setup JavaScript + Tailwind CSS v4 + Supabase successful!</p>
-      <p id="supabase-status" class="text-sm text-blue-600">Connecting to Supabase...</p>
-    </div>
-  </div>
-`;
+const appEl = document.getElementById('app');
 
-supabase.getSession().then(({ data: { session } }) => {
-  const statusEl = document.getElementById('supabase-status');
-  if (statusEl) {
-    if (session) {
-      statusEl.textContent = '✅ Supabase terhubung. User: ' + session.user.email;
-      statusEl.classList.remove('text-blue-600');
-      statusEl.classList.add('text-green-600');
-    } else {
-      statusEl.textContent = '✅ Supabase terhubung. Belum ada user login.';
-      statusEl.classList.remove('text-blue-600');
-      statusEl.classList.add('text-green-600');
-    }
-  }
-}).catch(() => {
-  const statusEl = document.getElementById('supabase-status');
-  if (statusEl) {
-    statusEl.textContent = '⚠️ Supabase belum dikonfigurasi. Cek file .env';
-    statusEl.classList.remove('text-blue-600');
-    statusEl.classList.add('text-red-600');
+app.init().then(() => {
+  console.log('[Finance Dashboard] App initialized.');
+}).catch((err) => {
+  console.error('[Finance Dashboard] Init error:', err);
+  if (appEl) {
+    appEl.innerHTML = `
+      <div class="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div class="text-center">
+          <h1 class="text-2xl font-bold text-gray-800 mb-2">Terjadi Kesalahan</h1>
+          <p class="text-gray-500">${err.message || 'Gagal menginisialisasi aplikasi. Cek koneksi Supabase.'}</p>
+        </div>
+      </div>
+    `;
   }
 });
-
-console.log('[Finance Dashboard] JavaScript + Tailwind + Supabase initialized.');
