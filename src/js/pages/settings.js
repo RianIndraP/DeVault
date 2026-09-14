@@ -1,8 +1,10 @@
+import { authService } from '../services/auth.js';
+
 export const settingsPage = {
   async render() {
     const container = document.getElementById('page-container');
     if (!container) return;
-    const user = await (await import('../services/auth.js')).authService.getCurrentUser();
+    const user = await authService.getCurrentUser();
     container.innerHTML = `
       <div class="max-w-2xl mx-auto">
         <div class="mb-6">

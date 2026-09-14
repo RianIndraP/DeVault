@@ -65,6 +65,7 @@ export const dashboardPage = {
   async loadAccounts() {
     const { data, error } = await accountService.getAll();
     const container = document.getElementById('dashboard-accounts');
+    if (!container) return;
     if (error || !data) { container.innerHTML = '<p class="text-red-500 text-sm">Gagal memuat akun</p>'; return; }
     if (!data.length) { container.innerHTML = '<p class="text-gray-400 text-sm">Belum punya akun</p>'; return; }
     container.innerHTML = data.map(a => `

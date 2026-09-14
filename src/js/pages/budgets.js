@@ -1,4 +1,5 @@
 import { budgetService } from '../services/database.js';
+import { categoryService } from '../services/database.js';
 
 export const budgetsPage = {
   async render() {
@@ -19,7 +20,7 @@ export const budgetsPage = {
               <input type="hidden" id="bud-id" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                <select id="bud-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">Pilih...</option></select>
+                <select id="bud-category" class="w-full px-3 py-2 border border-gray-300 rounded-lg"><option value="">Memuat...</option></select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
@@ -39,7 +40,16 @@ export const budgetsPage = {
       </div>
     `;
     this.attachEvents();
+    await this.loadCategories();
     await this.loadData();
+  },
+
+  async loadCategories() {
+    const { data: categories } = await categoryService.getAll();
+    const select = document.getElementById('bud-category');
+    if (select && categories) {
+      select.innerHTML = '<option value="">Pilih kategori...</option>' + categories.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    }
   },
 
   async loadData() {
@@ -47,12 +57,15 @@ export const budgetsPage = {
     const grid = document.getElementById('budgets-grid');
     if (error || !data) { grid.innerHTML = '<p class="text-red-500">Gagal memuat</p>'; return; }
     if (!data.length) { grid.innerHTML = '<p class="text-gray-400 col-span-full">Belum ada budget</p>'; return; }
+    const { data: categories } = await categoryService.getAll();
+    const catMap = {};
+    (categories || []).forEach(c => { catMap[c.id] = c.name; });
     grid.innerHTML = data.map(b => {
       const pct = b.amount > 0 ? Math.min((b.current_amount / b.amount) * 100, 100) : 0;
       const over = b.current_amount > b.amount;
       return `
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          <h3 class="font-bold text-gray-800 mb-2">${b.category_id || 'Semua Kategori'}</h3>
+          <h3 class="font-bold text-gray-800 mb-2">${catMap[b.category_id] || b.category_id || 'Semua Kategori'}</h3>
           <div class="w-full bg-gray-200 rounded-full h-3 mb-2">
             <div class="h-3 rounded-full ${over ? 'bg-red-500' : 'bg-blue-600'}" style="width: ${Math.min(pct, 100)}%"></div>
           </div>
@@ -68,7 +81,6 @@ export const budgetsPage = {
     const form = document.getElementById('budget-form');
     const addBtn = document.getElementById('btn-add-budget');
     const cancelBtn = document.getElementById('btn-cancel-modal');
-
     if (addBtn) addBtn.addEventListener('click', () => { document.getElementById('modal-title').textContent = 'Tambah Budget'; document.getElementById('bud-id').value = ''; modal.classList.remove('hidden'); });
     if (cancelBtn) cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
     if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });

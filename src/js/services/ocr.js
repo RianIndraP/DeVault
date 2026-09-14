@@ -1,5 +1,3 @@
-import { supabase } from './supabase.js';
-
 export const ocrService = {
   async extractFromImage(imageFile) {
     const { default: Tesseract } = await import('tesseract.js');

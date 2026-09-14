@@ -1,3 +1,5 @@
+import { transactionService } from '../services/database.js';
+
 export const reportsPage = {
   async render() {
     const container = document.getElementById('page-container');
@@ -56,7 +58,7 @@ export const reportsPage = {
   async generate() {
     const month = document.getElementById('report-month').value;
     const year = document.getElementById('report-year').value;
-    const { data: transactions, error } = await (await import('../services/database.js')).transactionService.getByMonth(parseInt(month), parseInt(year));
+    const { data: transactions, error } = await transactionService.getByMonth(parseInt(month), parseInt(year));
     if (error || !transactions) return;
     const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
     const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);

@@ -10,32 +10,58 @@ const getUserId = async () => {
   return user?.id || null;
 };
 
+const ensureProfile = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  try {
+    const { data: existing } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
+    if (!existing) {
+      const { error: profileErr } = await supabase.from('profiles').insert({
+        id: user.id,
+        user_id: user.id,
+        display_name: user.email || 'User'
+      });
+      if (profileErr) console.warn('[ensureProfile] Could not create profile:', profileErr.message);
+    } else if (existing.id !== user.id) {
+      const { error: updErr } = await supabase.from('profiles').update({
+        id: user.id,
+        display_name: user.email || 'User'
+      }).eq('user_id', user.id);
+      if (updErr) console.warn('[ensureProfile] Could not fix profile id:', updErr.message);
+    }
+  } catch (e) {
+    console.warn('[ensureProfile] Error:', e.message);
+  }
+};
+
 export const db = {
-  // Generic fetch
   async from(table) {
     const userId = await getUserId();
     if (!userId) return { data: null, error: new Error('User not authenticated') };
+    await ensureProfile();
     return supabase.from(table).select('*').eq('user_id', userId);
   },
 
-  // Generic insert
   async insert(table, recordData) {
     const userId = await getUserId();
     if (!userId) return { data: null, error: new Error('User not authenticated') };
+    await ensureProfile();
     const record = { ...recordData, user_id: userId };
     const { data, error } = await supabase.from(table).insert([record]).select().single();
     return { data, error };
   },
 
-  // Generic update
   async update(table, id, updates) {
-    const { data, error } = await supabase.from(table).update(updates).eq('id', id).select().single();
+    const userId = await getUserId();
+    if (!userId) return { data: null, error: new Error('User not authenticated') };
+    const { data, error } = await supabase.from(table).update(updates).eq('id', id).eq('user_id', userId).select().single();
     return { data, error };
   },
 
-  // Generic delete
   async delete(table, id) {
-    const { error } = await supabase.from(table).delete().eq('id', id);
+    const userId = await getUserId();
+    if (!userId) return { data: null, error: new Error('User not authenticated') };
+    const { error } = await supabase.from(table).delete().eq('id', id).eq('user_id', userId);
     return { error };
   }
 };
@@ -47,24 +73,11 @@ export const accountService = {
     if (error) return { data: null, error };
     return { data: data || [], error: null };
   },
-
-  async create(account) {
-    return db.insert('accounts', account);
-  },
-
-  async update(id, updates) {
-    return db.update('accounts', id, updates);
-  },
-
-  async delete(id) {
-    return db.delete('accounts', id);
-  },
-
+  async create(account) { return db.insert('accounts', account); },
+  async update(id, updates) { return db.update('accounts', id, updates); },
+  async delete(id) { return db.delete('accounts', id); },
   async updateBalance(id, newBalance) {
-    return db.update('accounts', id, {
-      current_balance: newBalance,
-      updated_at: new Date().toISOString()
-    });
+    return db.update('accounts', id, { current_balance: newBalance, updated_at: new Date().toISOString() });
   }
 };
 
@@ -75,18 +88,9 @@ export const categoryService = {
     if (error) return { data: null, error };
     return { data: data || [], error: null };
   },
-
-  async create(category) {
-    return db.insert('categories', category);
-  },
-
-  async update(id, updates) {
-    return db.update('categories', id, updates);
-  },
-
-  async delete(id) {
-    return db.delete('categories', id);
-  }
+  async create(category) { return db.insert('categories', category); },
+  async update(id, updates) { return db.update('categories', id, updates); },
+  async delete(id) { return db.delete('categories', id); }
 };
 
 export const transactionService = {
@@ -96,42 +100,26 @@ export const transactionService = {
     if (error) return { data: null, error };
     return { data: data || [], error: null };
   },
-
   async getByMonth(month, year) {
     const userId = await getUserId();
     const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('month', month)
-      .eq('year', year)
+      .from('transactions').select('*').eq('user_id', userId)
+      .eq('month', month).eq('year', year)
       .order('date', { ascending: false });
     return { data, error };
   },
-
   async create(transaction) {
     const userId = await getUserId();
     const record = { ...transaction, user_id: userId };
     const { data, error } = await supabase.from('transactions').insert([record]).select().single();
     return { data, error };
   },
-
-  async update(id, updates) {
-    return db.update('transactions', id, updates);
-  },
-
-  async delete(id) {
-    return db.delete('transactions', id);
-  },
-
+  async update(id, updates) { return db.update('transactions', id, updates); },
+  async delete(id) { return db.delete('transactions', id); },
   async getItems(transactionId) {
-    const { data, error } = await supabase
-      .from('transaction_items')
-      .select('*')
-      .eq('transaction_id', transactionId);
+    const { data, error } = await supabase.from('transaction_items').select('*').eq('transaction_id', transactionId);
     return { data, error };
   },
-
   async addItem(item) {
     const { data, error } = await supabase.from('transaction_items').insert([item]).select().single();
     return { data, error };
@@ -145,26 +133,9 @@ export const budgetService = {
     if (error) return { data: null, error };
     return { data: data || [], error: null };
   },
-
-  async create(budget) {
-    return db.insert('budgets', budget);
-  },
-
-  async update(id, updates) {
-    return db.update('budgets', id, updates);
-  },
-
-  async delete(id) {
-    return db.delete('budgets', id);
-  },
-
-  async getByMonth(month, year) {
-    const result = await db.from('budgets');
-    const { data, error } = await result;
-    if (error) return { data: null, error };
-    const filtered = (data || []).filter(b => b.month === month && b.year === year);
-    return { data: filtered, error: null };
-  }
+  async create(budget) { return db.insert('budgets', budget); },
+  async update(id, updates) { return db.update('budgets', id, updates); },
+  async delete(id) { return db.delete('budgets', id); }
 };
 
 export const goalService = {
@@ -174,24 +145,7 @@ export const goalService = {
     if (error) return { data: null, error };
     return { data: data || [], error: null };
   },
-
-  async create(goal) {
-    return db.insert('goals', goal);
-  },
-
-  async update(id, updates) {
-    return db.update('goals', id, updates);
-  },
-
-  async delete(id) {
-    return db.delete('goals', id);
-  },
-
-  async addContribution(goalId, amount) {
-    const { data, error } = await supabase.rpc('add_goal_contribution', {
-      p_goal_id: goalId,
-      p_amount: amount
-    });
-    return { data, error };
-  }
+  async create(goal) { return db.insert('goals', goal); },
+  async update(id, updates) { return db.update('goals', id, updates); },
+  async delete(id) { return db.delete('goals', id); }
 };

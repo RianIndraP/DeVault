@@ -1,5 +1,3 @@
-import { supabase } from './supabase.js';
-
 export const exportService = {
   async exportToExcel(data) {
     const { default: XLSX } = await import('xlsx');

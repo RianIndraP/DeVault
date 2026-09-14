@@ -5,7 +5,7 @@
 
 -- 1. PROFILES TABLE
 CREATE TABLE IF NOT EXISTS profiles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT auth.uid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     display_name TEXT,
     avatar_url TEXT,
@@ -229,6 +229,29 @@ CREATE OR REPLACE FUNCTION get_user_id_for_transaction(p_transaction_id UUID)
 RETURNS UUID AS $$
     SELECT user_id FROM transactions WHERE id = p_transaction_id;
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
+
+-- ============================================
+-- AUTO-CREATE PROFILE ON USER REGISTER
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+SECURITY DEFINER SET search_path = public
+LANGUAGE plpgsql AS $$
+BEGIN
+    INSERT INTO public.profiles (id, user_id, display_name)
+    VALUES (
+        NEW.id,
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.email)
+    );
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
 -- AUTO-UPDATE updated_at

@@ -1,4 +1,3 @@
-import { supabase } from './services/supabase.js';
 import { authService } from './services/auth.js';
 import { router } from './router.js';
 import { sidebar } from './components/sidebar.js';
