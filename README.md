@@ -1,7 +1,7 @@
 # Personal Finance Dashboard
 
 ## Deskripsi
-Aplikasi web manajemen keuangan pribadi berbasis JavaScript. Membantu pengguna mencatat, memantau, menganalisis, dan mengelola keuangan pribadi melalui dashboard interaktif.
+Aplikasi web manajemen keuangan pribadi berbasis JavaScript + Supabase. Membantu pengguna mencatat, memantau, menganalisis, dan mengelola keuangan pribadi melalui dashboard interaktif dengan Row Level Security (RLS) untuk isolasi data antar pengguna.
 
 ## Teknologi yang Digunakan
 
@@ -17,16 +17,17 @@ Aplikasi web manajemen keuangan pribadi berbasis JavaScript. Membantu pengguna m
 | Teknologi | Fungsi | Status |
 |-----------|--------|--------|
 | Supabase | Authentication, PostgreSQL database, RLS, Storage | ✅ Selesai |
-| Supabase Auth | Register, Login, Logout, Reset Password | ✅ Selesai |
-| PostgreSQL | Penyimpanan data dengan Row Level Security | ✅ Selesai |
+| Supabase Auth | Register, Login, Logout | ✅ Selesai |
+| PostgreSQL | Penyimpanan data dengan Row Level Security (RLS) | ✅ Selesai |
 
 ### Libraries
 | Teknologi | Versi | Fungsi | Status |
 |-----------|-------|--------|--------|
-| Chart.js | ^4.4.0 | Visualisasi grafik (line, bar, doughnut) | 🔲 Belum |
-| SheetJS (xlsx) | ^0.18.5 | Import & export file Excel (.xlsx, .csv) | 🔲 Belum |
-| Tesseract.js | ^5.0.4 | OCR - pembacaan teks dari gambar struk | 🔲 Belum |
-| DOMPurify | ^3.1.6 | Keamanan - sanitasi HTML input | 🔲 Belum |
+| xlsx | ^0.18.5 | Export file Excel (.xlsx) | ✅ Dependency terpasang |
+| jspdf | ^3.0.0 | Export PDF | ✅ Dependency terpasang |
+| tesseract.js | ^6.0.0 | OCR - pembacaan teks dari gambar struk | ✅ Dependency terpasang |
+| dompurify | ^3.1.6 | Keamanan - sanitasi HTML input | ✅ Dependency terpasang |
+| Chart.js | ^4.4.0 | Visualisasi grafik | 🔲 Belum |
 
 ## Struktur Project
 
@@ -34,48 +35,38 @@ Aplikasi web manajemen keuangan pribadi berbasis JavaScript. Membantu pengguna m
 personal-finance-dashboard/
 ├── index.html              ← File utama HTML (entry point)
 ├── package.json            ← Dependency & script commands
-├── vite.config.js          ← Konfigurasi Vite (port, plugin Tailwind)
+├── vite.config.js          ← Konfigurasi Vite (PostCSS + Tailwind v4)
+├── postcss.config.js       ← PostCSS config (@tailwindcss/postcss)
 ├── .env                    ← Environment variables (Supabase credentials)
 ├── .env.example            ← Template variabel environment
 ├── .gitignore              ← File yang tidak di-commit ke Git
+├── database.sql            ← Schema SQL Supabase (9 tabel + RLS + triggers)
 ├── public/                 ← File statis (favicon, gambar)
 └── src/
     ├── main.js             ← Titik masuk JavaScript
     ├── index.css           ← Styles (hanya berisi @import "tailwindcss")
     └── js/
-        ├── app.js          ← Inisialisasi aplikasi utama
-        ├── router.js       ← Client-side routing
-        ├── store.js        ← Manajemen state global
+        ├── app.js          ← Inisialisasi aplikasi utama (routing)
+        ├── router.js       ← Client-side router
         ├── components/     ← Komponen UI yang bisa dipakai ulang
         │   ├── sidebar.js      ← Sidebar navigasi
-        │   ├── topbar.js       ← Topbar header
-        │   ├── dashboard.js    ← Komponen dashboard
-        │   ├── transaction.js  ← Komponen transaksi
-        │   ├── chart.js        ← Komponen grafik Chart.js
-        │   └── ...
+        │   └── topbar.js       ← Topbar header
         ├── pages/          ← Halaman aplikasi
-        │   ├── dashboard.js
-        │   ├── transactions.js
-        │   ├── accounts.js
-        │   ├── categories.js
-        │   ├── budgets.js
-        │   ├── goals.js
-        │   ├── reports.js
-        │   └── settings.js
-        ├── services/       ← Layanan API & integrasi
-        │   ├── supabase.js     ← Client Supabase (createClient)
-        │   ├── auth.js         ← Layanan autentikasi (register, login, logout, getSession)
-        │   ├── transaction.js  ← CRUD transaksi
-        │   ├── account.js      ← CRUD akun
-        │   ├── category.js     ← CRUD kategori
-        │   ├── budget.js       ← CRUD budget
-        │   ├── goal.js         ← CRUD target
-        │   ├── export.js       ← Excel export
-        │   └── ocr.js          ← OCR receipt scanning
-        └── utils/          ← Fungsi bantu
-            ├── helpers.js      ← Utility umum
-            ├── format.js       ← Format rupiah, tanggal, dll
-            └── validators.js   ← Validasi input
+        │   ├── auth.js         ← Register, Login, Logout
+        │   ├── dashboard.js    ← Dashboard dengan statistik & ringkasan akun
+        │   ├── transactions.js ← CRUD transaksi + transaction items
+        │   ├── accounts.js     ← CRUD akun (bank, e-wallet, cash)
+        │   ├── categories.js   ← CRUD kategori
+        │   ├── budgets.js      ← Budget per kategori
+        │   ├── goals.js        ← Target tabungan
+        │   ├── reports.js      ← Laporan bulanan
+        │   └── settings.js     ← Pengaturan
+        └── services/       ← Layanan API & integrasi
+            ├── supabase.js   ← Client Supabase (createClient)
+            ├── auth.js       ← Layanan autentikasi
+            ├── database.js   ← CRUD service semua tabel (accounts, categories, transactions, budgets, goals)
+            ├── export.js     ← Excel/PDF export service
+            └── ocr.js        ← OCR receipt scanning service
 ```
 
 ## Cara Menjalankan
@@ -111,81 +102,66 @@ npm run preview
 **Cara kerja Tailwind v4 berbeda dari v3:**
 - **Tidak ada `tailwind.config.js`** — konfigurasi langsung di CSS
 - **Tidak ada `@tailwind base/components/utilities`** — cukup `@import "tailwindcss"`
-- **Menggunakan `@tailwindcss/vite` plugin** — memproses Tailwind di Vite
+- **Menggunakan `@tailwindcss/postcss`** (via PostCSS) untuk memproses Tailwind di Vite
 
 File konfigurasi:
 - `src/index.css` — hanya berisi `@import "tailwindcss"`
-- `vite.config.js` — menambahkan plugin `@tailwindcss/vite`
-- `postcss.config.js` — **tidak diperlukan**
+- `vite.config.js` — `css: { postcss: './postcss.config.js' }`
+- `postcss.config.js` — berisi `import { from } from '@tailwindcss/postcss'`
 - `tailwind.config.js` — **tidak diperlukan**
 
 ## Konfigurasi Supabase
 
-### Prasyarat (Dilakukan di luar kode)
-1. Buat akun di [https://supabase.com](https://supabase.com)
-2. Buat project baru
-3. Buka **Settings > API**
-4. Salin **Project URL** dan **anon key**
+### Database Schema
+9 tabel dengan RLS lengkap:
+- `profiles` — Profil pengguna (id = auth.uid())
+- `accounts` — Sumber uang (bank, e-wallet, cash)
+- `categories` — Kategori transaksi buatan pengguna
+- `transactions` — Catatan transaksi utama (income, expense, transfer, adjustment)
+- `transaction_items` — Detail item per transaksi expense
+- `transfers` — Transfer antar akun
+- `budgets` — Batas pengeluaran per kategori per bulan
+- `goals` — Target tabungan
+- `recurring_transactions` — Transaksi berulang
 
-### Konfigurasi di Project
-5. Buat file `.env` di root project:
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-6. `.env` sudah ada di `.gitignore` — tidak akan di-commit ke Git
-7. `src/js/services/supabase.js` — client Supabase menggunakan `@supabase/supabase-js` npm package
-8. `src/js/services/auth.js` — layanan autentikasi: `register`, `login`, `logout`, `getSession`, `onAuthStateChange`
+Semua tabel memiliki kolom `user_id` dan menggunakan **Row Level Security (RLS)** untuk isolasi data antar pengguna. `profiles.id` menggunakan `auth.uid()` sehingga FK constraint selalu valid.
+
+### Auto-create Profile Trigger
+Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` memastikan FK constraint antara `accounts.user_id` dan `profiles.id` selalu terpenuhi.
 
 ### Verifikasi
 - Buka browser ke `http://localhost:5173`
-- Jika terhubung, halaman menampilkan: **"✅ Supabase terhubung. Belum ada user login."** (berwarna hijau)
-- Jika gagal, pesan: **"⚠️ Supabase belum dikonfigurasi. Cek file .env"** (berwarna merah)
+- Register → Login → Dashboard → navigasi ke semua halaman
+- Buat akun, kategori, dan transaksi untuk verifikasi
 
 ## Fitur yang Direncanakan
 
-### Nomor 1: Setup Project JavaScript ✅
-- Vite ^5.2.0 sebagai build tool & dev server
-- ES Modules (`import/export`)
-- Struktur folder: `src/js/{components,pages,services,utils,store}`
-- `package.json`, `vite.config.js`, `index.html`, `src/main.js`
-- Dev server berjalan di `http://localhost:5173`
+### ✅ Selesai
+- Nomor 1: Setup Project JavaScript (Vite, ES Modules, Tailwind v4)
+- Nomor 2: Setup Tailwind CSS v4 dengan PostCSS
+- Nomor 3: Setup Supabase Client & Auth
+- Nomor 4: Database + RLS (9 tabel, policies, triggers, auto-create profile)
+- Nomor 5: Auth Pages (Register, Login, Logout dengan redirect)
+- Nomor 6: Layout Dashboard (Sidebar, Topbar, Responsive)
+- Nomor 7-10: CRUD Pages (Accounts, Categories, Transactions, Dashboard)
+- Nomor 11-13: Budget, Goals, Reports pages
+- Nomor 14: Settings page
+- Nomor 15: Export/Import services (stub)
+- Nomor 16: OCR service (stub)
 
-### Nomor 2: Setup Tailwind CSS v4 ✅
-- Tailwind CSS v4.3.3
-- Plugin `@tailwindcss/vite` untuk integrasi dengan Vite
-- File `src/index.css` berisi `@import "tailwindcss"`
-- Tidak perlu `tailwind.config.js` atau `postcss.config.js`
-- Styling responsive: `bg-gray-50`, `flex`, `font-bold`, `text-gray-800`, dll.
-
-### Nomor 3: Setup Supabase ✅
-- Install `@supabase/supabase-js` via npm
-- Buat akun di supabase.com
-- Buat project, dapatkan URL dan anon key
-- Konfigurasi `.env`
-- `src/js/services/supabase.js` — client Supabase dengan `createClient`
-- `src/js/services/auth.js` — authentication service (register, login, logout, getSession)
-- `src/main.js` — menampilkan status koneksi Supabase di halaman
-- **Terverifikasi**: halaman menampilkan "✅ Supabase terhubung"
-
-### Nomor 4-18: Fitur Lainnya 🔲 Belum
-- Authentication (Register, Login, Logout) — **layanan dasar sudah ada di auth.js**
-- Database + RLS (PostgreSQL)
-- Layout Dashboard
-- Accounts, Categories, Transactions
-- Dashboard Statistics
+### 🔲 Belum Dikerjakan
 - Chart.js (Grafik harian, kategori, income vs expense)
-- Budget (Buat budget, progres, warning)
-- Goals (Buat target tabungan)
-- Reports (Laporan bulanan)
-- Excel Export (Download laporan .xlsx)
-- Excel Import (Upload .xlsx / .csv)
-- OCR (Scan struk via kamera/gambar)
+- Dashboard statistics (real-time charts)
+- Excel Export (download laporan .xlsx)
+- Excel Import (upload .xlsx / .csv)
+- OCR Receipt Scanning (implementasi Tesseract.js)
 - Insights (Analisis otomatis)
+- Recurring Transactions
+- Search & Filter
 
 ### Phase 2 (Setelah MVP Stabil)
 - Excel Import (preview & edit)
-- Receipt OCR
+- Receipt OCR (implementasi penuh)
 - Recurring Transactions
 - Spending Pattern Analysis
 - Savings Rate Calculation
@@ -202,21 +178,6 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 - Mobile Application
 - Bank/API Integration
 
-## Database Schema
-
-Tabel yang akan dibuat di Supabase PostgreSQL:
-- `profiles` - Profil pengguna
-- `accounts` - Sumber uang (bank, e-wallet, cash)
-- `categories` - Kategori transaksi buatan pengguna
-- `transactions` - Catatan transaksi utama
-- `transaction_items` - Detail item per transaksi expense
-- `transfers` - Transfer antar akun
-- `budgets` - Batas pengeluaran per kategori
-- `goals` - Target tabungan
-- `recurring_transactions` - Transaksi berulang
-
-Semua tabel memiliki kolom `user_id` dan menggunakan **Row Level Security (RLS)** untuk isolasi data antar pengguna.
-
 ## Prinsip Desain
 - **Input once, understand everywhere** - Data dimasukkan sekali, digunakan di semua fitur
 - **Responsive** - Desktop, Laptop, Tablet, Mobile
@@ -225,11 +186,131 @@ Semua tabel memiliki kolom `user_id` dan menggunakan **Row Level Security (RLS)*
 
 ## Keamanan
 - Semua data diisolasi per pengguna (RLS)
+- `profiles.id` = `auth.uid()` memastikan FK constraint valid
+- `db.update()` dan `db.delete()` menyertakan filter `user_id` untuk RLS compliance
+- `ensureProfile()` auto-membuat profil sebelum setiap operasi database
 - Tidak menyimpan password sendiri
 - Authentication via Supabase
 - Tidak meminta data rekening bank
-- File receipt terisolasi per user
 - `.env` tidak di-commit ke Git
+
+## Database Schema Detail
+
+### profiles
+```
+id UUID PRIMARY KEY DEFAULT auth.uid()
+user_id UUID REFERENCES auth.users(id) UNIQUE NOT NULL
+display_name TEXT
+avatar_url TEXT
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
+
+### accounts
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
+name TEXT NOT NULL
+type TEXT CHECK (type IN ('bank', 'e_wallet', 'cash', 'other'))
+initial_balance DECIMAL(15,2) DEFAULT 0
+current_balance DECIMAL(15,2) DEFAULT 0
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
+
+### categories
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
+name TEXT NOT NULL
+icon TEXT DEFAULT '📁'
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
+
+### transactions
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
+account_id UUID REFERENCES accounts(id) ON DELETE SET NULL
+category_id UUID REFERENCES categories(id) ON DELETE SET NULL
+type TEXT CHECK (type IN ('income', 'expense', 'transfer', 'adjustment'))
+date DATE NOT NULL
+description TEXT
+amount DECIMAL(15,2) NOT NULL CHECK (amount > 0)
+source TEXT CHECK (source IN ('manual', 'excel', 'receipt'))
+month INTEGER CHECK (month BETWEEN 1 AND 12)
+year INTEGER CHECK (year >= 2000)
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
+
+### transaction_items
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+transaction_id UUID REFERENCES transactions(id) ON DELETE CASCADE NOT NULL
+item_name TEXT NOT NULL
+unit_price DECIMAL(15,2) NOT NULL CHECK (unit_price >= 0)
+quantity INTEGER NOT NULL CHECK (quantity > 0) DEFAULT 1
+unit TEXT DEFAULT 'pcs'
+subtotal DECIMAL(15,2) GENERATED ALWAYS AS (unit_price * quantity) STORED
+created_at TIMESTAMPTZ
+```
+
+### budgets
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
+category_id UUID REFERENCES categories(id) ON DELETE SET NULL
+month INTEGER NOT NULL CHECK (month BETWEEN 1 AND 12)
+year INTEGER NOT NULL CHECK (year >= 2000)
+amount DECIMAL(15,2) NOT NULL CHECK (amount > 0)
+UNIQUE(user_id, category_id, month, year)
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
+
+### goals
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
+name TEXT NOT NULL
+target_amount DECIMAL(15,2) NOT NULL CHECK (target_amount > 0)
+current_amount DECIMAL(15,2) DEFAULT 0 CHECK (current_amount >= 0)
+deadline DATE
+description TEXT
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
+
+### recurring_transactions
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
+account_id UUID REFERENCES accounts(id) ON DELETE SET NULL
+category_id UUID REFERENCES categories(id) ON DELETE SET NULL
+type TEXT CHECK (type IN ('income', 'expense'))
+amount DECIMAL(15,2) NOT NULL CHECK (amount > 0)
+description TEXT
+frequency TEXT CHECK (frequency IN ('daily', 'weekly', 'monthly', 'yearly'))
+next_date DATE NOT NULL
+active BOOLEAN DEFAULT TRUE
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
+
+### transfers
+```
+id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
+from_account_id UUID REFERENCES accounts(id) ON DELETE SET NULL
+to_account_id UUID REFERENCES accounts(id) ON DELETE SET NULL
+amount DECIMAL(15,2) NOT NULL CHECK (amount > 0)
+date DATE NOT NULL
+description TEXT
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+```
 
 ## Metrik Sukses MVP
 - Jumlah pengguna aktif
@@ -255,16 +336,28 @@ Proprietary - Personal Use
 - Gunakan `npm run build` untuk produksi
 - Selalu gunakan `.env` untuk credential Supabase (jangan commit ke Git)
 - Semua kode JavaScript menggunakan ES Modules (`import/export`)
-- Folder `src/js/components/` berisi komponen yang bisa dipakai ulang
-- Folder `src/js/pages/` berisi halaman aplikasi
-- Folder `src/js/services/` berisi semua panggilan API
-- Folder `src/js/store.js` adalah state manager sederhana
-- Folder `src/js/router.js` adalah client-side router
-- Semua data transaksi harus memiliki `source` field: `manual`, `excel`, atau `receipt`
-- Tailwind v4 menggunakan `@import "tailwindcss"` di CSS, bukan `@tailwind` directives
-- Tidak ada `tailwind.config.js` atau `postcss.config.js` di project ini
-- File CSS Tailwind diproses oleh `@tailwindcss/vite` plugin di Vite
+- Folder `src/js/components/` berisi komponen yang bisa dipakai ulang (sidebar, topbar)
+- Folder `src/js/pages/` berisi halaman aplikasi (auth, dashboard, transactions, accounts, categories, budgets, goals, reports, settings)
+- Folder `src/js/services/` berisi semua panggilan API (supabase, auth, database, export, ocr)
+- `database.js` adalah service terpusat untuk semua operasi CRUD (accounts, categories, transactions, budgets, goals)
+- `ensureProfile()` dipanggil otomatis sebelum setiap operasi database untuk memastikan profil pengguna ada
+- `profiles.id` menggunakan `auth.uid()` sehingga FK constraint selalu valid
+- Tailwind v4 menggunakan `@import "tailwindcss"` di CSS, diproses oleh `@tailwindcss/postcss` di Vite
+- `vite.config.js` memiliki `css: { postcss: './postcss.config.js' }` untuk integrasi PostCSS
+- `postcss.config.js` berisi `import { from } from '@tailwindcss/postcss'`
 - Supabase client menggunakan `@supabase/supabase-js` npm package, bukan CDN
-- `supabase.auth.getSession()` untuk mengecek session pengguna
-- `supabase.auth.onAuthStateChange()` untuk mendeteksi perubahan auth state
-- `authService` module mengekspose: `register`, `login`, `logout`, `getCurrentUser`, `updateProfile`, `onAuthStateChange`
+- Semua tabel memiliki RLS policies yang hanya mengizinkan akses oleh user yang bersangkutan
+- `db.update()` dan `db.delete()` menyertakan `eq('user_id', userId)` untuk RLS compliance
+- `transactionService.create()` dan `transactionService.addItem()` memanggil `ensureProfile()` sebelum insert
+- Semua data transaksi harus memiliki `source` field: `manual`, `excel`, atau `receipt`
+- `database.sql` harus dijalankan di Supabase SQL Editor sebelum aplikasi digunakan
+- `crypto.randomUUID()` tidak digunakan lagi — `profiles.id` menggunakan `auth.uid()`
+- Auto-create profile trigger: `on_auth_user_created` di `auth.users`
+
+## Git History
+- `dbb45d8` — fix: Auth redirect + replace primary-* colors + PostCSS explicit config
+- `92ccdcc` — feat: Step 5 Database & RLS complete
+- `701c881` — fix: rename data parameter to recordData to avoid ESBuild conflict
+- `d2a6b6f` — fix: rewrite transactions.js (was truncated)
+- `7adb472` — fix: resolve 409 Conflict by making profiles.id use auth.uid()
+- `312610e` — fix: add ensureProfile() to transactionService methods
