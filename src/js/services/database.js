@@ -109,6 +109,7 @@ export const transactionService = {
     return { data, error };
   },
   async create(transaction) {
+    await ensureProfile();
     const userId = await getUserId();
     const record = { ...transaction, user_id: userId };
     const { data, error } = await supabase.from('transactions').insert([record]).select().single();
@@ -117,10 +118,12 @@ export const transactionService = {
   async update(id, updates) { return db.update('transactions', id, updates); },
   async delete(id) { return db.delete('transactions', id); },
   async getItems(transactionId) {
+    await ensureProfile();
     const { data, error } = await supabase.from('transaction_items').select('*').eq('transaction_id', transactionId);
     return { data, error };
   },
   async addItem(item) {
+    await ensureProfile();
     const { data, error } = await supabase.from('transaction_items').insert([item]).select().single();
     return { data, error };
   }
