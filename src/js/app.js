@@ -14,6 +14,7 @@ export const app = {
     this.currentUser = await authService.getCurrentUser();
     this.setupRouter();
     this.renderLayout();
+    await this.checkAuth();
   },
 
   setupRouter() {
@@ -30,7 +31,7 @@ export const app = {
     const appEl = document.getElementById('app');
     if (!appEl) return;
     appEl.innerHTML = `
-      <div class="flex min-h-screen bg-dark-50">
+      <div class="flex min-h-screen bg-gray-50">
         <div id="sidebar-container"></div>
         <div class="flex-1 flex flex-col">
           <div id="topbar-container"></div>

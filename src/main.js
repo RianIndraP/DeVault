@@ -1,5 +1,4 @@
 import './index.css';
-import { supabase } from './js/services/supabase.js';
 import { authService } from './js/services/auth.js';
 import { app } from './js/app.js';
 
