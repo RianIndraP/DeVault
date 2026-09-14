@@ -5,6 +5,13 @@ import { sidebar } from './components/sidebar.js';
 import { topbar } from './components/topbar.js';
 import { dashboardPage } from './pages/dashboard.js';
 import { authPage } from './pages/auth.js';
+import { transactionsPage } from './pages/transactions.js';
+import { accountsPage } from './pages/accounts.js';
+import { categoriesPage } from './pages/categories.js';
+import { budgetsPage } from './pages/budgets.js';
+import { goalsPage } from './pages/goals.js';
+import { reportsPage } from './pages/reports.js';
+import { settingsPage } from './pages/settings.js';
 
 export const app = {
   currentUser: null,
@@ -21,6 +28,13 @@ export const app = {
     const routes = {
       '/': dashboardPage,
       '/dashboard': dashboardPage,
+      '/transactions': transactionsPage,
+      '/accounts': accountsPage,
+      '/categories': categoriesPage,
+      '/budgets': budgetsPage,
+      '/goals': goalsPage,
+      '/reports': reportsPage,
+      '/settings': settingsPage,
       '/login': authPage,
       '/register': authPage
     };
