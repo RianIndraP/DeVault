@@ -15,26 +15,26 @@ export const authPage = {
             </h2>
             <p class="mt-2 text-center text-sm text-gray-600" id="auth-subtitle">
               ${isRegister
-                ? 'Sudah punya akun? <a href="#/" id="btn-switch-to-login" class="font-medium text-primary-600 hover:text-primary-500">Masuk</a>'
-                : 'Belum punya akun? <a href="#/register" id="btn-switch-to-register" class="font-medium text-primary-600 hover:text-primary-500">Daftar baru</a>'}
+                ? 'Sudah punya akun? <a href="#" id="btn-switch-to-login" class="font-medium text-blue-600 hover:text-blue-500">Masuk</a>'
+                : 'Belum punya akun? <a href="#" id="btn-switch-to-register" class="font-medium text-blue-600 hover:text-blue-500">Daftar baru</a>'}
             </p>
           </div>
           <form id="auth-form" class="mt-8 space-y-6">
             <div id="auth-name-field" class="${isRegister ? '' : 'hidden'}">
               <label for="auth-name" class="sr-only">Nama</label>
-              <input id="auth-name" name="name" type="text" ${isRegister ? '' : 'disabled'} class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm" placeholder="Nama lengkap" />
+              <input id="auth-name" name="name" type="text" ${isRegister ? '' : 'disabled'} class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Nama lengkap" />
             </div>
             <div>
               <label for="auth-email" class="sr-only">Email</label>
-              <input id="auth-email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm" placeholder="Email address" />
+              <input id="auth-email" name="email" type="email" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Email address" />
             </div>
             <div>
               <label for="auth-password" class="sr-only">Password</label>
-              <input id="auth-password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm" placeholder="Password" />
+              <input id="auth-password" name="password" type="password" required class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" placeholder="Password" />
             </div>
             <div id="auth-error" class="hidden text-red-600 text-sm text-center"></div>
             <div>
-              <button type="submit" id="auth-submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+              <button type="submit" id="auth-submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <span id="auth-submit-text">${isRegister ? 'Daftar' : 'Masuk'}</span>
               </button>
             </div>
@@ -50,8 +50,8 @@ export const authPage = {
     if (form) form.addEventListener('submit', async (e) => { e.preventDefault(); await this.handleSubmit(); });
     const switchToRegister = document.getElementById('btn-switch-to-register');
     const switchToLogin = document.getElementById('btn-switch-to-login');
-    if (switchToRegister) switchToRegister.addEventListener('click', () => { router.navigate('/register'); });
-    if (switchToLogin) switchToLogin.addEventListener('click', () => { router.navigate('/'); });
+    if (switchToRegister) switchToRegister.addEventListener('click', (e) => { e.preventDefault(); router.navigate('/register'); });
+    if (switchToLogin) switchToLogin.addEventListener('click', (e) => { e.preventDefault(); router.navigate('/'); });
   },
 
   async handleSubmit() {
@@ -74,9 +74,12 @@ export const authPage = {
         const { data, error } = await authService.register(email, password, name);
         if (error) throw error;
         if (errorEl) { errorEl.textContent = '✅ Registrasi berhasil! Silakan cek email untuk verifikasi.'; errorEl.classList.remove('hidden'); errorEl.classList.remove('text-red-600'); errorEl.classList.add('text-green-600'); }
+        await new Promise(r => setTimeout(r, 2000));
+        router.navigate('/login');
       } else {
         const { data, error } = await authService.login(email, password);
         if (error) throw error;
+        router.navigate('/');
       }
     } catch (err) {
       if (errorEl) { errorEl.textContent = err.message || 'Terjadi kesalahan. Coba lagi.'; errorEl.classList.remove('hidden'); }
