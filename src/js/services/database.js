@@ -19,10 +19,10 @@ export const db = {
   },
 
   // Generic insert
-  async insert(table, data) {
+  async insert(table, recordData) {
     const userId = await getUserId();
     if (!userId) return { data: null, error: new Error('User not authenticated') };
-    const record = { ...data, user_id: userId };
+    const record = { ...recordData, user_id: userId };
     const { data, error } = await supabase.from(table).insert([record]).select().single();
     return { data, error };
   },
