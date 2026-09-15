@@ -51,11 +51,11 @@ export const app = {
       return;
     }
     appEl.innerHTML = `
-      <div class="flex min-h-screen bg-gray-50">
+        <div class="flex min-h-screen" style="background:var(--bg)">
         <div id="sidebar-container"></div>
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col" style="margin-left:250px">
           <div id="topbar-container"></div>
-          <main id="page-container" class="flex-1 p-4 md:p-6 lg:p-8 overflow-auto"></main>
+          <main id="page-container" class="flex-1 p-4 md:p-6 lg:p-8 overflow-auto" style="background:var(--bg);color:var(--text)">
         </div>
       </div>
     `;

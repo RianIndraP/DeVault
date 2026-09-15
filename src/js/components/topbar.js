@@ -9,11 +9,11 @@ export const topbar = {
     const user = await authService.getCurrentUser();
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'User';
     container.innerHTML = `
-      <header class="bg-white border-b border-gray-200 px-4 md:px-6 lg:px-8 py-3 flex items-center justify-between sticky top-0 z-10">
+      <header class="flex items-center justify-between px-4 md:px-6 lg:px-8 py-3 border-b sticky top-0 z-10" style="background:var(--surface);border-color:var(--border)">
         <div class="flex items-center gap-3">
           <button id="btn-mobile-menu" class="md:hidden text-gray-600 hover:text-blue-700 text-xl">☰</button>
           <div class="relative hidden md:block">
-            <input type="text" id="global-search" placeholder="Cari transaksi..." class="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 lg:w-80" />
+            <input type="text" id="global-search" placeholder="Cari transaksi..." class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 lg:w-80" style="background:var(--surface);color:var(--text)" />
             <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
           </div>
         </div>
@@ -24,7 +24,7 @@ export const topbar = {
           </div>
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-semibold text-sm">${displayName.charAt(0).toUpperCase()}</div>
-            <span id="topbar-user-name" class="hidden md:block text-sm font-medium text-gray-700">${displayName}</span>
+            <span id="topbar-user-name" class="hidden md:block text-sm font-medium" style="color:var(--text)">${displayName}</span>
           </div>
         </div>
       </header>

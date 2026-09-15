@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dompetku — Dashboard Keuangan</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --canvas: #F3F5EF;
+            --surface: #FFFFFF;
+            --surface-alt: #EAEFE7;
+            --border: #DEE4D8;
+            --ink: #16241C;
+            --ink-muted: #5B6B5F;
+            --emerald: #1F8A5D;
+            --emerald-strong: #146247;
+            --emerald-soft: #E4F3EB;
+            --coral: #C24E3D;
+            --coral-soft: #FBE7E2;
+            --amber: #B4790F;
+            --amber-soft: #FBEDD4;
+            --indigo: #3557C7;
+            --indigo-soft: #E7ECFB;
+            --shadow: 0 1px 2px rgba(22, 36, 28, .05);
+        }
+
+        html.dark {
+            --canvas: #0E1E19;
+            --surface: #16302A;
+            --surface-alt: #1C3A32;
+            --border: #2C4B40;
+            --ink: #EAF3EC;
+            --ink-muted: #9FBBAC;
+            --emerald: #3FD497;
+            --emerald-strong: #5FE0AC;
+            --emerald-soft: #1B3E33;
+            --coral: #FF8A76;
+            --coral-soft: #3A241F;
+            --amber: #F2B84B;
+            --amber-soft: #3B3120;
+            --indigo: #8CB0FF;
+            --indigo-soft: #20294A;
+            --shadow: 0 1px 2px rgba(0, 0, 0, .25);
+        }
+
+        * {
+            transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+        }
+
+        body {
+            background: var(--canvas);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-display {
+            font-family: 'Fraunces', serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 99px;
+        }
+
+        .focus-ring:focus-visible {
+            outline: 2px solid var(--emerald);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <div class="flex min-h-screen">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside id="sidebar"
+            class="fixed inset-y-0 left-0 z-30 w-64 flex-col -translate-x-full lg:translate-x-0 lg:flex transition-transform duration-200"
+            style="background:var(--surface); border-right:1px solid var(--border);">
+            <div class="h-16 flex items-center gap-2 px-5" style="border-bottom:1px solid var(--border);">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                    style="background:var(--emerald); color:#fff;">Rp</span>
+                <span class="font-display text-lg font-semibold">Dompetku</span>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5 text-sm">
+                <p class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide"
+                    style="color:var(--ink-muted); letter-spacing:.06em;">Ringkasan</p>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium"
+                    style="background:var(--emerald-soft); color:var(--emerald-strong);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 13h4v8H3zM10 8h4v13h-4zM17 3h4v18h-4z" />
+                    </svg>
+                    Dashboard
+                </a>
+
+                <p class="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide"
+                    style="color:var(--ink-muted); letter-spacing:.06em;">Transaksi</p>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <rect x="3" y="5" width="18" height="14" rx="2" />
+                        <path stroke-linecap="round" d="M3 10h18" />
+                    </svg>
+                    Semua transaksi
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6" />
+                    </svg>
+                    Import Excel
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 7l1-3h14l1 3M5 7h14v12a1 1 0 01-1 1H6a1 1 0 01-1-1V7z" />
+                    </svg>
+                    Scan struk
+                </a>
+
+                <p class="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide"
+                    style="color:var(--ink-muted); letter-spacing:.06em;">Kelola</p>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-6 9 6M5 9v10h14V9" />
+                    </svg>
+                    Akun
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M7 7h.01M3 11l8-8h6a2 2 0 012 2v6l-8 8a2 2 0 01-2.8 0l-5.2-5.2a2 2 0 010-2.8z" />
+                    </svg>
+                    Kategori
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12h6m-6 4h6M9 8h6M5 3h14v18l-7-4-7 4V3z" />
+                    </svg>
+                    Budget
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" />
+                        <circle cx="12" cy="12" r="4.5" />
+                        <circle cx="12" cy="12" r=".5" fill="currentColor" />
+                    </svg>
+                    Target
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg" style="color:var(--ink-muted);">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 17v-6m3 6v-9m3 9v-3M5 21h14a1 1 0 001-1V4a1 1 0 00-1-1H5a1 1 0 00-1 1v16a1 1 0 001 1z" />
+                    </svg>
+                    Laporan
+                </a>
+            </nav>
+
+            <div class="p-3" style="border-top:1px solid var(--border);">
+                <div class="flex items-center gap-3 px-3 py-2 rounded-lg" style="background:var(--surface-alt);">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold"
+                        style="background:var(--emerald); color:#fff;">R</div>
+                    <div class="leading-tight">
+                        <p class="text-sm font-medium">Rian</p>
+                        <p class="text-xs" style="color:var(--ink-muted);">Profil pribadi</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- backdrop for mobile drawer -->
+        <div id="backdrop" class="fixed inset-0 bg-black/40 z-20 hidden lg:hidden"></div>
+
+        <!-- ================= MAIN ================= -->
+        <div class="flex-1 lg:ml-64 min-w-0">
+
+            <!-- TOPBAR -->
+            <header class="h-16 sticky top-0 z-10 flex items-center justify-between gap-3 px-4 md:px-8"
+                style="background:var(--canvas); border-bottom:1px solid var(--border);">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button id="menuBtn" class="lg:hidden p-2 rounded-lg focus-ring"
+                        style="border:1px solid var(--border);" aria-label="Buka menu">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
+                        </svg>
+                    </button>
+                    <div class="hidden sm:flex items-center gap-2 rounded-lg px-3 py-2 w-64"
+                        style="background:var(--surface); border:1px solid var(--border);">
+                        <svg class="w-4 h-4 shrink-0" style="color:var(--ink-muted);" fill="none" stroke="currentColor"
+                            stroke-width="1.8" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="7" />
+                            <path stroke-linecap="round" d="M21 21l-4.3-4.3" />
+                        </svg>
+                        <input type="text" placeholder="Cari transaksi, item..."
+                            class="bg-transparent text-sm w-full outline-none placeholder:opacity-60" />
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 md:gap-3">
+                    <button id="themeBtn" class="p-2 rounded-lg focus-ring" style="border:1px solid var(--border);"
+                        aria-label="Ubah tema">
+                        <svg id="iconSun" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8"
+                            viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="4" />
+                            <path stroke-linecap="round"
+                                d="M12 2v2m0 16v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M2 12h2m16 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
+                        </svg>
+                        <svg id="iconMoon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="1.8"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z" />
+                        </svg>
+                    </button>
+                    <button class="relative p-2 rounded-lg focus-ring" style="border:1px solid var(--border);"
+                        aria-label="Notifikasi">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <span
+                            class="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-semibold"
+                            style="background:var(--coral); color:#fff;">3</span>
+                    </button>
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold"
+                        style="background:var(--emerald); color:#fff;">R</div>
+                </div>
+            </header>
+
+            <main class="p-4 md:p-8 max-w-7xl mx-auto">
+
+                <!-- PAGE HEAD -->
+                <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+                    <div>
+                        <h1 class="font-display text-3xl font-semibold">Selamat siang, Rian</h1>
+                        <p class="mt-1 text-sm" style="color:var(--ink-muted);">Selasa, 15 September 2026 — begini
+                            kondisi keuanganmu bulan ini.</p>
+                    </div>
+                    <button class="text-sm font-medium px-4 py-2 rounded-lg focus-ring"
+                        style="background:var(--emerald); color:#fff;">+ Tambah transaksi</button>
+                </div>
+
+                <!-- HERO: BALANCE + HEALTH SCORE -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+
+                    <!-- Balance ledger card -->
+                    <div class="lg:col-span-2 rounded-2xl p-6 md:p-7"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <p class="text-sm" style="color:var(--ink-muted);">Total saldo — semua akun</p>
+                        <p class="font-display text-5xl md:text-6xl font-semibold mt-2 tabular-nums">Rp5.130.000</p>
+                        <div class="mt-1.5 flex items-center gap-1.5 text-sm font-medium" style="color:var(--emerald);">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12l5-5 4 4 5-6" />
+                            </svg>
+                            +Rp4.280.000 bersih bulan ini
+                        </div>
+
+                        <div class="mt-6 pt-5 grid grid-cols-3 gap-4" style="border-top:1px solid var(--border);">
+                            <div>
+                                <p class="text-xs" style="color:var(--ink-muted);">Pemasukan</p>
+                                <p class="text-lg font-semibold mt-0.5 tabular-nums" style="color:var(--emerald);">
+                                    Rp6.350.000</p>
+                            </div>
+                            <div>
+                                <p class="text-xs" style="color:var(--ink-muted);">Pengeluaran</p>
+                                <p class="text-lg font-semibold mt-0.5 tabular-nums" style="color:var(--coral);">
+                                    Rp2.070.000</p>
+                            </div>
+                            <div>
+                                <p class="text-xs" style="color:var(--ink-muted);">Savings rate</p>
+                                <p class="text-lg font-semibold mt-0.5 tabular-nums">67%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial health gauge -->
+                    <div class="rounded-2xl p-6 flex flex-col items-center justify-center text-center"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <p class="text-sm mb-3" style="color:var(--ink-muted);">Skor kesehatan finansial</p>
+                        <svg viewBox="0 0 140 140" class="w-32 h-32">
+                            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--surface-alt)" stroke-width="12" />
+                            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--emerald)" stroke-width="12"
+                                stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="80.2"
+                                transform="rotate(-90 70 70)" />
+                            <text x="70" y="66" text-anchor="middle" class="font-display" font-size="30"
+                                fill="var(--ink)" font-weight="600">78</text>
+                            <text x="70" y="86" text-anchor="middle" font-size="11" fill="var(--ink-muted)">dari
+                                100</text>
+                        </svg>
+                        <p class="mt-3 text-sm font-medium" style="color:var(--emerald);">Baik — di jalur yang sehat</p>
+                        <p class="mt-1 text-xs leading-relaxed" style="color:var(--ink-muted);">Indikator internal,
+                            bukan nasihat finansial profesional.</p>
+                    </div>
+                </div>
+
+                <!-- CHARTS -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+                    <div class="lg:col-span-3 rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="font-display text-lg font-semibold">Pemasukan vs pengeluaran</h3>
+                            <div class="flex gap-1 text-xs" role="group">
+                                <button class="periodBtn px-2.5 py-1 rounded-md font-medium" data-range="6"
+                                    style="background:var(--emerald-soft); color:var(--emerald-strong);">6
+                                    bulan</button>
+                                <button class="periodBtn px-2.5 py-1 rounded-md font-medium" data-range="3"
+                                    style="color:var(--ink-muted);">3 bulan</button>
+                            </div>
+                        </div>
+                        <p class="text-sm mb-4" style="color:var(--ink-muted);">April – September 2026</p>
+                        <canvas id="ieChart" height="220"></canvas>
+                    </div>
+
+                    <div class="lg:col-span-2 rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <h3 class="font-display text-lg font-semibold mb-1">Pengeluaran harian</h3>
+                        <p class="text-sm mb-4" style="color:var(--ink-muted);">1–15 September, hari terboros: 5 Sep</p>
+                        <canvas id="dailyChart" height="220"></canvas>
+                    </div>
+                </div>
+
+                <!-- CATEGORY BREAKDOWN + SPENDING PATTERN -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+
+                    <div class="lg:col-span-3 rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <h3 class="font-display text-lg font-semibold mb-4">Pengeluaran per kategori — September</h3>
+                        <div class="space-y-3.5">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>🍚 Makanan</span><span
+                                        class="tabular-nums font-medium">Rp850.000 · 41%</span></div>
+                                <div class="h-2 rounded-full" style="background:var(--surface-alt);">
+                                    <div class="h-2 rounded-full" style="width:41%; background:var(--emerald);"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>🧾 Tagihan</span><span
+                                        class="tabular-nums font-medium">Rp550.000 · 27%</span></div>
+                                <div class="h-2 rounded-full" style="background:var(--surface-alt);">
+                                    <div class="h-2 rounded-full" style="width:27%; background:var(--indigo);"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>🛵 Transportasi</span><span
+                                        class="tabular-nums font-medium">Rp320.000 · 15%</span></div>
+                                <div class="h-2 rounded-full" style="background:var(--surface-alt);">
+                                    <div class="h-2 rounded-full" style="width:15%; background:var(--amber);"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>🎬 Hiburan</span><span
+                                        class="tabular-nums font-medium">Rp180.000 · 9%</span></div>
+                                <div class="h-2 rounded-full" style="background:var(--surface-alt);">
+                                    <div class="h-2 rounded-full" style="width:9%; background:var(--coral);"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>💊 Kesehatan</span><span
+                                        class="tabular-nums font-medium">Rp120.000 · 6%</span></div>
+                                <div class="h-2 rounded-full" style="background:var(--surface-alt);">
+                                    <div class="h-2 rounded-full" style="width:6%; background:#8B6FD6;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1"><span>🤝 Umum</span><span
+                                        class="tabular-nums font-medium">Rp50.000 · 2%</span></div>
+                                <div class="h-2 rounded-full" style="background:var(--surface-alt);">
+                                    <div class="h-2 rounded-full" style="width:2%; background:#5B6B5F;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <h3 class="font-display text-lg font-semibold mb-4">Pola pengeluaran</h3>
+                        <ul class="space-y-4 text-sm">
+                            <li class="flex gap-3">
+                                <span class="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0"
+                                    style="background:var(--emerald); margin-top:7px;"></span>
+                                <span>Rata-rata pengeluaran harian: <b class="tabular-nums">Rp110.333</b></span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0"
+                                    style="background:var(--coral); margin-top:7px;"></span>
+                                <span>Hari paling boros: <b>5 September</b> (tagihan internet) — <span
+                                        class="tabular-nums">Rp300.000</span></span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0"
+                                    style="background:var(--indigo); margin-top:7px;"></span>
+                                <span>Hari paling hemat: <b>6 September</b> — <span
+                                        class="tabular-nums">Rp40.000</span></span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="mt-0.5 w-1.5 h-1.5 rounded-full shrink-0"
+                                    style="background:var(--amber); margin-top:7px;"></span>
+                                <span>Pengeluaran akhir pekan rata-rata <b>35% lebih tinggi</b> dibanding hari
+                                    biasa</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- ACCOUNTS + ACTIVITY -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+
+                    <div class="rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <h3 class="font-display text-lg font-semibold mb-4">Ringkasan akun</h3>
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between py-3"
+                                style="border-bottom:1px solid var(--border);">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                                        style="background:var(--emerald-soft);">🏦</span>
+                                    <div>
+                                        <p class="text-sm font-medium">BCA</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">Bank</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums">Rp3.200.000</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3"
+                                style="border-bottom:1px solid var(--border);">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                                        style="background:var(--indigo-soft);">📱</span>
+                                    <div>
+                                        <p class="text-sm font-medium">GoPay</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">E-wallet</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums">Rp650.000</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3"
+                                style="border-bottom:1px solid var(--border);">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                                        style="background:var(--amber-soft);">📲</span>
+                                    <div>
+                                        <p class="text-sm font-medium">DANA</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">E-wallet</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums">Rp500.000</span>
+                            </div>
+                            <div class="flex items-center justify-between py-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-9 h-9 rounded-lg flex items-center justify-center text-base"
+                                        style="background:var(--surface-alt);">💵</span>
+                                    <div>
+                                        <p class="text-sm font-medium">Cash</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">Tunai</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums">Rp780.000</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <h3 class="font-display text-lg font-semibold mb-4">Aktivitas terakhir</h3>
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between py-2.5"
+                                style="border-bottom:1px solid var(--border);">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="w-2 h-2 rounded-full shrink-0"
+                                        style="background:var(--emerald);"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium truncate">Gaji bulanan</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">Pemasukan · 1 Sep</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums shrink-0"
+                                    style="color:var(--emerald);">+Rp5.000.000</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2.5"
+                                style="border-bottom:1px solid var(--border);">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="w-2 h-2 rounded-full shrink-0"
+                                        style="background:var(--emerald);"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium truncate">Freelance project</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">Pemasukan · 10 Sep</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums shrink-0"
+                                    style="color:var(--emerald);">+Rp1.200.000</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2.5"
+                                style="border-bottom:1px solid var(--border);">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="w-2 h-2 rounded-full shrink-0" style="background:var(--coral);"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium truncate">Beras, Galon, Telur</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">Makanan · 13 Sep · 3 item</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums shrink-0"
+                                    style="color:var(--coral);">-Rp125.000</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2.5"
+                                style="border-bottom:1px solid var(--border);">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="w-2 h-2 rounded-full shrink-0"
+                                        style="background:var(--indigo);"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium truncate">Transfer ke DANA</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">Transfer · BCA → DANA · 12
+                                            Sep</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums shrink-0"
+                                    style="color:var(--indigo);">Rp200.000</span>
+                            </div>
+                            <div class="flex items-center justify-between py-2.5">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <span class="w-2 h-2 rounded-full shrink-0" style="background:var(--coral);"></span>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium truncate">Internet bulanan</p>
+                                        <p class="text-xs" style="color:var(--ink-muted);">Tagihan · 5 Sep</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold tabular-nums shrink-0"
+                                    style="color:var(--coral);">-Rp300.000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BUDGET -->
+                <div class="rounded-2xl p-6 mb-6"
+                    style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-display text-lg font-semibold">Status budget — September</h3>
+                        <span class="text-sm font-medium" style="color:var(--ink-muted);">Rp2.070.000 terpakai dari
+                            Rp2.500.000</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                        <div class="rounded-xl p-4" style="background:var(--surface-alt);">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium">🍚 Makanan</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    style="background:var(--amber-soft); color:var(--amber);">Warning</span>
+                            </div>
+                            <div class="h-2 rounded-full mb-2" style="background:var(--border);">
+                                <div class="h-2 rounded-full" style="width:85%; background:var(--amber);"></div>
+                            </div>
+                            <p class="text-xs tabular-nums" style="color:var(--ink-muted);">Rp850.000 / Rp1.000.000 ·
+                                85%</p>
+                        </div>
+
+                        <div class="rounded-xl p-4" style="background:var(--surface-alt);">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium">🧾 Tagihan</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    style="background:var(--amber-soft); color:var(--amber);">Warning</span>
+                            </div>
+                            <div class="h-2 rounded-full mb-2" style="background:var(--border);">
+                                <div class="h-2 rounded-full" style="width:92%; background:var(--amber);"></div>
+                            </div>
+                            <p class="text-xs tabular-nums" style="color:var(--ink-muted);">Rp550.000 / Rp600.000 · 92%
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl p-4" style="background:var(--surface-alt);">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium">🎬 Hiburan</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    style="background:var(--coral-soft); color:var(--coral);">Terlampaui</span>
+                            </div>
+                            <div class="h-2 rounded-full mb-2" style="background:var(--border);">
+                                <div class="h-2 rounded-full" style="width:100%; background:var(--coral);"></div>
+                            </div>
+                            <p class="text-xs tabular-nums" style="color:var(--ink-muted);">Rp180.000 / Rp150.000 · 120%
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl p-4" style="background:var(--surface-alt);">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium">🛵 Transportasi</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    style="background:var(--emerald-soft); color:var(--emerald-strong);">Aman</span>
+                            </div>
+                            <div class="h-2 rounded-full mb-2" style="background:var(--border);">
+                                <div class="h-2 rounded-full" style="width:71%; background:var(--emerald);"></div>
+                            </div>
+                            <p class="text-xs tabular-nums" style="color:var(--ink-muted);">Rp320.000 / Rp450.000 · 71%
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl p-4" style="background:var(--surface-alt);">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium">💊 Kesehatan</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    style="background:var(--emerald-soft); color:var(--emerald-strong);">Aman</span>
+                            </div>
+                            <div class="h-2 rounded-full mb-2" style="background:var(--border);">
+                                <div class="h-2 rounded-full" style="width:48%; background:var(--emerald);"></div>
+                            </div>
+                            <p class="text-xs tabular-nums" style="color:var(--ink-muted);">Rp120.000 / Rp250.000 · 48%
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl p-4" style="background:var(--surface-alt);">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-sm font-medium">🤝 Umum</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    style="background:var(--emerald-soft); color:var(--emerald-strong);">Aman</span>
+                            </div>
+                            <div class="h-2 rounded-full mb-2" style="background:var(--border);">
+                                <div class="h-2 rounded-full" style="width:50%; background:var(--emerald);"></div>
+                            </div>
+                            <p class="text-xs tabular-nums" style="color:var(--ink-muted);">Rp50.000 / Rp100.000 · 50%
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GOALS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <p class="text-sm" style="color:var(--ink-muted);">🎯 Target tabungan</p>
+                                <h4 class="font-display text-xl font-semibold mt-0.5">Beli Laptop</h4>
+                            </div>
+                            <span class="text-sm font-semibold px-2.5 py-1 rounded-full"
+                                style="background:var(--emerald-soft); color:var(--emerald-strong);">60%</span>
+                        </div>
+                        <div class="h-2.5 rounded-full mb-3" style="background:var(--surface-alt);">
+                            <div class="h-2.5 rounded-full" style="width:60%; background:var(--emerald);"></div>
+                        </div>
+                        <div class="flex justify-between text-sm tabular-nums">
+                            <span style="color:var(--ink-muted);">Rp6.000.000 terkumpul</span>
+                            <span class="font-medium">dari Rp10.000.000</span>
+                        </div>
+                        <p class="text-xs mt-3" style="color:var(--ink-muted);">Target 31 Des 2026 — diperkirakan
+                            tercapai <b style="color:var(--ink);">November 2026</b> jika ritme menabung tetap.</p>
+                    </div>
+
+                    <div class="rounded-2xl p-6"
+                        style="background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <p class="text-sm" style="color:var(--ink-muted);">🛟 Target tabungan</p>
+                                <h4 class="font-display text-xl font-semibold mt-0.5">Dana Darurat</h4>
+                            </div>
+                            <span class="text-sm font-semibold px-2.5 py-1 rounded-full"
+                                style="background:var(--indigo-soft); color:var(--indigo);">65%</span>
+                        </div>
+                        <div class="h-2.5 rounded-full mb-3" style="background:var(--surface-alt);">
+                            <div class="h-2.5 rounded-full" style="width:65%; background:var(--indigo);"></div>
+                        </div>
+                        <div class="flex justify-between text-sm tabular-nums">
+                            <span style="color:var(--ink-muted);">Rp3.250.000 terkumpul</span>
+                            <span class="font-medium">dari Rp5.000.000</span>
+                        </div>
+                        <p class="text-xs mt-3" style="color:var(--ink-muted);">Target Maret 2027 — setara 3 bulan
+                            pengeluaran rutin.</p>
+                    </div>
+                </div>
+
+                <!-- AUTOMATIC INSIGHTS -->
+                <div class="mb-4">
+                    <h3 class="font-display text-lg font-semibold mb-4">Insight otomatis</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="rounded-2xl p-5"
+                            style="background:var(--amber-soft); border:1px solid var(--border);">
+                            <p class="text-xl mb-2">⚠️</p>
+                            <p class="text-sm leading-relaxed">Budget <b>Makanan</b> sudah 85% terpakai — sisa Rp150.000
+                                sebelum melebihi batas bulan ini.</p>
+                        </div>
+                        <div class="rounded-2xl p-5"
+                            style="background:var(--indigo-soft); border:1px solid var(--border);">
+                            <p class="text-xl mb-2">📅</p>
+                            <p class="text-sm leading-relaxed">Pengeluaran akhir pekan rata-rata <b>35% lebih tinggi</b>
+                                dibanding hari kerja bulan ini.</p>
+                        </div>
+                        <div class="rounded-2xl p-5"
+                            style="background:var(--emerald-soft); border:1px solid var(--border);">
+                            <p class="text-xl mb-2">🌱</p>
+                            <p class="text-sm leading-relaxed">Kamu menyisihkan <b>67%</b> dari pemasukan bulan ini —
+                                lebih tinggi dari rata-rata 3 bulan terakhir.</p>
+                        </div>
+                        <div class="rounded-2xl p-5"
+                            style="background:var(--surface-alt); border:1px solid var(--border);">
+                            <p class="text-xl mb-2">💻</p>
+                            <p class="text-sm leading-relaxed">Dengan pola menabung saat ini, target <b>Beli Laptop</b>
+                                diperkirakan tercapai <b>November 2026</b>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-center text-xs py-6" style="color:var(--ink-muted);">Dompetku · Personal Finance
+                    Dashboard — data ditampilkan untuk keperluan pratinjau tampilan.</p>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // ---------- THEME TOGGLE (in-memory, no storage) ----------
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('themeBtn');
+        const iconSun = document.getElementById('iconSun');
+        const iconMoon = document.getElementById('iconMoon');
+
+        function applyChartTheme() {
+            const s = getComputedStyle(html);
+            Chart.defaults.color = s.getPropertyValue('--ink').trim();
+            Chart.defaults.borderColor = s.getPropertyValue('--border').trim();
+            Chart.defaults.font.family = 'Inter';
+        }
+
+        themeBtn.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            iconSun.classList.toggle('hidden', isDark);
+            iconMoon.classList.toggle('hidden', !isDark);
+            applyChartTheme();
+            ieChart.update();
+            dailyChart.update();
+        });
+
+        // ---------- MOBILE SIDEBAR ----------
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('backdrop');
+        const menuBtn = document.getElementById('menuBtn');
+        function toggleSidebar(open) {
+            sidebar.classList.toggle('-translate-x-full', !open);
+            backdrop.classList.toggle('hidden', !open);
+        }
+        menuBtn.addEventListener('click', () => toggleSidebar(true));
+        backdrop.addEventListener('click', () => toggleSidebar(false));
+
+        // ---------- CHARTS ----------
+        applyChartTheme();
+        const rootStyles = getComputedStyle(html);
+        const emerald = rootStyles.getPropertyValue('--emerald').trim();
+        const coral = rootStyles.getPropertyValue('--coral').trim();
+
+        const ieData6 = {
+            labels: ['Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep'],
+            income: [5.8, 5.5, 6.0, 5.9, 6.1, 6.35],
+            expense: [2.9, 3.4, 2.6, 3.1, 2.8, 2.07]
+        };
+        const ieData3 = {
+            labels: ['Jul', 'Agu', 'Sep'],
+            income: [5.9, 6.1, 6.35],
+            expense: [3.1, 2.8, 2.07]
+        };
+        const ieChart = new Chart(document.getElementById('ieChart'), {
+            type: 'line',
+            data: {
+                labels: ieData6.labels,
+                datasets: [
+                    { label: 'Pemasukan (juta)', data: ieData6.income, borderColor: emerald, backgroundColor: emerald + '33', tension: .35, fill: true, pointRadius: 3 },
+                    { label: 'Pengeluaran (juta)', data: ieData6.expense, borderColor: coral, backgroundColor: coral + '22', tension: .35, fill: true, pointRadius: 3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } } },
+                scales: { y: { beginAtZero: true, grid: { display: true } }, x: { grid: { display: false } } }
+            }
+        });
+
+        document.querySelectorAll('.periodBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.periodBtn').forEach(b => { b.style.background = ''; b.style.color = 'var(--ink-muted)'; });
+                btn.style.background = 'var(--emerald-soft)'; btn.style.color = 'var(--emerald-strong)';
+                const d = btn.dataset.range === '3' ? ieData3 : ieData6;
+                ieChart.data.labels = d.labels;
+                ieChart.data.datasets[0].data = d.income;
+                ieChart.data.datasets[1].data = d.expense;
+                ieChart.update();
+            });
+        });
+
+        const dailyChart = new Chart(document.getElementById('dailyChart'), {
+            type: 'bar',
+            data: {
+                labels: Array.from({ length: 15 }, (_, i) => i + 1),
+                datasets: [{
+                    label: 'Pengeluaran (Rp ribu)',
+                    data: [120, 45, 180, 60, 300, 40, 95, 150, 70, 55, 200, 65, 75, 50, 150],
+                    backgroundColor: coral + '99',
+                    borderRadius: 4,
+                    maxBarThickness: 18
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { display: true } }, x: { grid: { display: false } } }
+            }
+        });
+    </script>
+</body>
+
+</html>
