@@ -44,13 +44,14 @@ personal-finance-dashboard/
 ├── public/                 ← File statis (favicon, gambar)
 └── src/
     ├── main.js             ← Titik masuk JavaScript
-    ├── index.css           ← Styles (hanya berisi @import "tailwindcss")
+    ├── index.css           ← Styles (CSS variables + layout classes)
     └── js/
         ├── app.js          ← Inisialisasi aplikasi utama (routing)
         ├── router.js       ← Client-side router
         ├── components/     ← Komponen UI yang bisa dipakai ulang
         │   ├── sidebar.js      ← Sidebar navigasi
-        │   └── topbar.js       ← Topbar header
+        │   ├── topbar.js       ← Topbar header
+        │   └── icons.js        ← Library icon SVG
         ├── pages/          ← Halaman aplikasi
         │   ├── auth.js         ← Register, Login, Logout
         │   ├── dashboard.js    ← Dashboard dengan statistik & ringkasan akun
@@ -142,22 +143,34 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 - Nomor 3: Setup Supabase Client & Auth
 - Nomor 4: Database + RLS (9 tabel, policies, triggers, auto-create profile)
 - Nomor 5: Auth Pages (Register, Login, Logout dengan redirect)
-- Nomor 6: Layout Dashboard (Sidebar, Topbar, Responsive)
+- Nomor 6: Layout Dashboard (Sidebar, Topbar, Responsive, CSS Variables)
+- Nomor 6b: Dashboard Design — Hero section, stat tiles, health gauge, activity feed, budgets, goals, insights
+- Nomor 6c: Theme Persistence — Dark/light theme saved to localStorage, auto-applied on load
 - Nomor 7-10: CRUD Pages (Accounts, Categories, Transactions, Dashboard)
 - Nomor 11-13: Budget, Goals, Reports pages
 - Nomor 14: Settings page
 - Nomor 15: Export/Import services (stub)
 - Nomor 16: OCR service (stub)
+- Nomor 17: Icons component (SVG icon library)
+- Nomor 18: Dashboard layout refactored to CSS Variables (bg-gray-50 → var(--bg))
 
 ### 🔲 Belum Dikerjakan
 - Chart.js (Grafik harian, kategori, income vs expense)
-- Dashboard statistics (real-time charts)
 - Excel Export (download laporan .xlsx)
 - Excel Import (upload .xlsx / .csv)
 - OCR Receipt Scanning (implementasi Tesseract.js)
 - Insights (Analisis otomatis)
 - Recurring Transactions
 - Search & Filter
+- Advanced Reports
+
+### ✅ Selesai (Tambahan Terakhir)
+- Theme persistence ke `localStorage` — dark/light mode tersimpan, auto-applied saat load
+- Dashboard design: Hero gradient section, stat tiles dengan accent bar, health gauge, sparkline, activity feed dengan SVG icons, budgets dengan status badges, goals section, insight cards
+- CSS custom properties untuk semua komponen (dark/light theming native)
+- Layout refactored: `bg-gray-50` → `var(--bg)` CSS variables
+- Sidebar/Topbar pakai CSS variables
+- `src/js/components/icons.js` — SVG icon library
 
 ### Phase 2 (Setelah MVP Stabil)
 - Excel Import (preview & edit)
@@ -336,10 +349,10 @@ Proprietary - Personal Use
 - Gunakan `npm run build` untuk produksi
 - Selalu gunakan `.env` untuk credential Supabase (jangan commit ke Git)
 - Semua kode JavaScript menggunakan ES Modules (`import/export`)
-- Folder `src/js/components/` berisi komponen yang bisa dipakai ulang (sidebar, topbar)
-- Folder `src/js/pages/` berisi halaman aplikasi (auth, dashboard, transactions, accounts, categories, budgets, goals, reports, settings)
-- Folder `src/js/services/` berisi semua panggilan API (supabase, auth, database, export, ocr)
-- `database.js` adalah service terpusat untuk semua operasi CRUD (accounts, categories, transactions, budgets, goals)
+- `src/js/components/` berisi komponen UI yang bisa dipakai ulang (sidebar, topbar, icons)
+- `src/js/pages/` berisi halaman aplikasi (auth, dashboard, transactions, accounts, categories, budgets, goals, reports, settings)
+- `src/js/services/` berisi semua panggilan API (supabase, auth, database, export, ocr)
+- `src/index.css` berisi CSS custom properties (variabel) untuk dark/light theme dan semua kelas layout dashboard
 - `ensureProfile()` dipanggil otomatis sebelum setiap operasi database untuk memastikan profil pengguna ada
 - `profiles.id` menggunakan `auth.uid()` sehingga FK constraint selalu valid
 - Tailwind v4 menggunakan `@import "tailwindcss"` di CSS, diproses oleh `@tailwindcss/postcss` di Vite
@@ -353,11 +366,21 @@ Proprietary - Personal Use
 - `database.sql` harus dijalankan di Supabase SQL Editor sebelum aplikasi digunakan
 - `crypto.randomUUID()` tidak digunakan lagi — `profiles.id` menggunakan `auth.uid()`
 - Auto-create profile trigger: `on_auth_user_created` di `auth.users`
+- `src/js/components/icons.js` — library icon SVG, setiap icon punya key dan nilai SVG string
+- `localStorage.setItem('theme', 'dark'|'light')` menyimpan preferensi tema
+- `document.documentElement.classList.toggle('dark')` mengaktifkan tema gelap
+- CSS custom properties di `:root` dan `html.dark` mendukung dark/light theme
+- Semua komponen UI (sidebar, topbar, dashboard) menggunakan CSS variables bukan Tailwind gray classes
+- `src/index.css` berisi CSS variabel + semua kelas layout dashboard (`.hero`, `.stat-grid`, `.tile`, `.card`, `.grid-2`, `.activity-row`, `.acct-row`, `.budget-item`, `.goal-item`, `.insight-grid`, `.gauge-row`, `.bar-track`, dll.)
+- Dashboard menggunakan hero gradient section, stat tiles, health gauge, sparkline canvas, activity feed dengan SVG icons
 
 ## Git History
-- `dbb45d8` — fix: Auth redirect + replace primary-* colors + PostCSS explicit config
-- `92ccdcc` — feat: Step 5 Database & RLS complete
-- `701c881` — fix: rename data parameter to recordData to avoid ESBuild conflict
-- `d2a6b6f` — fix: rewrite transactions.js (was truncated)
+- `5ff2cdc` — feat: persist theme preference to localStorage, add icons.js component
+- `65b58d4` — feat: dashboard design with hero section, stat tiles, gauge, activity, budgets
+- `bb9ee4d` — feat: Step 6 Layout Dashboard
+- `fdc8b5d` — docs: update README.md to reflect completed project state
+- `312610e` — fix: add ensureProfile() to transactionService methods that bypass db()
 - `7adb472` — fix: resolve 409 Conflict by making profiles.id use auth.uid()
-- `312610e` — fix: add ensureProfile() to transactionService methods
+- `d2a6b6f` — fix: rewrite transactions.js (was truncated)
+- `701c881` — fix: rename data parameter to recordData to avoid ESBuild conflict
+- `92ccdcc` — feat: Step 5 Database & RLS complete
