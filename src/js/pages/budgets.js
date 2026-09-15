@@ -56,7 +56,15 @@ export const budgetsPage = {
     const { data, error } = await budgetService.getAll();
     const grid = document.getElementById('budgets-grid');
     if (error || !data) { grid.innerHTML = '<p class="text-red-500">Gagal memuat</p>'; return; }
-    if (!data.length) { grid.innerHTML = '<p class="text-gray-400 col-span-full">Belum ada budget</p>'; return; }
+    if (!data.length) {
+      grid.innerHTML = `
+        <div class="col-span-full bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <span class="text-4xl mb-4 block">📋</span>
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Belum ada budget</h3>
+          <p class="text-gray-400 text-sm mb-4">Atur batasan pengeluaran per kategori</p>
+        </div>`;
+      return;
+    }
     const { data: categories } = await categoryService.getAll();
     const catMap = {};
     (categories || []).forEach(c => { catMap[c.id] = c.name; });

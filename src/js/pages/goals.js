@@ -50,7 +50,15 @@ export const goalsPage = {
     const { data, error } = await goalService.getAll();
     const grid = document.getElementById('goals-grid');
     if (error || !data) { grid.innerHTML = '<p class="text-red-500">Gagal memuat</p>'; return; }
-    if (!data.length) { grid.innerHTML = '<p class="text-gray-400 col-span-full">Belum ada target</p>'; return; }
+    if (!data.length) {
+      grid.innerHTML = `
+        <div class="col-span-full bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <span class="text-4xl mb-4 block">🎯</span>
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Belum ada target</h3>
+          <p class="text-gray-400 text-sm mb-4">Buat target tabungan pertama Anda</p>
+        </div>`;
+      return;
+    }
     grid.innerHTML = data.map(g => {
       const pct = g.target_amount > 0 ? Math.min((g.current_amount / g.target_amount) * 100, 100) : 0;
       return `

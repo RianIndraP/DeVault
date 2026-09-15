@@ -51,7 +51,15 @@ export const accountsPage = {
     const { data, error } = await accountService.getAll();
     const grid = document.getElementById('accounts-grid');
     if (error || !data) { grid.innerHTML = '<p class="text-red-500">Gagal memuat akun</p>'; return; }
-    if (!data.length) { grid.innerHTML = '<p class="text-gray-400 col-span-full">Belum ada akun</p>'; return; }
+    if (!data.length) {
+      grid.innerHTML = `
+        <div class="col-span-full bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <span class="text-4xl mb-4 block">🏦</span>
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Belum ada akun</h3>
+          <p class="text-gray-400 text-sm mb-4">Buat akun pertama untuk mulai mengelola keuangan</p>
+        </div>`;
+      return;
+    }
     grid.innerHTML = data.map(a => `
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
         <div class="flex justify-between items-start">

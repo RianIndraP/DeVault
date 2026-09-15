@@ -42,7 +42,15 @@ export const categoriesPage = {
     const { data, error } = await categoryService.getAll();
     const grid = document.getElementById('categories-grid');
     if (error || !data) { grid.innerHTML = '<p class="text-red-500">Gagal memuat</p>'; return; }
-    if (!data.length) { grid.innerHTML = '<p class="text-gray-400 col-span-full">Belum ada kategori</p>'; return; }
+    if (!data.length) {
+      grid.innerHTML = `
+        <div class="col-span-full bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <span class="text-4xl mb-4 block">🏷️</span>
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Belum ada kategori</h3>
+          <p class="text-gray-400 text-sm mb-4">Buat kategori agar transaksi lebih terorganisir</p>
+        </div>`;
+      return;
+    }
     grid.innerHTML = data.map(c => `
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center gap-4">
         <span class="text-3xl">${c.icon || '📁'}</span>

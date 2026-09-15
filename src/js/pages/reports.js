@@ -66,7 +66,12 @@ export const reportsPage = {
     document.getElementById('report-expense').textContent = `Rp ${Number(expense).toLocaleString('id-ID')}`;
     document.getElementById('report-net').textContent = `Rp ${Number(income - expense).toLocaleString('id-ID')}`;
     const details = document.getElementById('report-details');
-    if (!transactions.length) { details.innerHTML = '<p class="text-gray-400">Tidak ada transaksi</p>'; return; }
+    if (!transactions.length) { details.innerHTML = `
+      <div class="bg-gray-50 rounded-xl p-8 text-center">
+        <span class="text-3xl mb-3 block">📄</span>
+        <p class="text-gray-500">Tidak ada transaksi untuk bulan ini</p>
+        <p class="text-gray-400 text-sm">Tambahkan transaksi untuk melihat laporan</p>
+      </div>`; return; }
     details.innerHTML = transactions.map(t => `
       <div class="flex justify-between py-2 border-b border-gray-100 text-sm">
         <span>${new Date(t.date).toLocaleDateString('id-ID')} - ${t.description || '-'}</span>

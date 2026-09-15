@@ -14,12 +14,14 @@ import { settingsPage } from './pages/settings.js';
 
 export const app = {
   currentUser: null,
+  unsubscribeAuth: null,
 
   async init() {
     console.log('[Finance Dashboard] Initializing...');
     this.currentUser = await authService.getCurrentUser();
     this.setupRouter();
     this.renderLayout();
+    this.setupAuthListener();
     await this.checkAuth();
   },
 
@@ -43,6 +45,11 @@ export const app = {
   renderLayout() {
     const appEl = document.getElementById('app');
     if (!appEl) return;
+    if (!this.currentUser) {
+      appEl.innerHTML = '<div id="page-container"></div>';
+      router.resolve();
+      return;
+    }
     appEl.innerHTML = `
       <div class="flex min-h-screen bg-gray-50">
         <div id="sidebar-container"></div>
@@ -57,11 +64,33 @@ export const app = {
     router.resolve();
   },
 
+  setupAuthListener() {
+    this.unsubscribeAuth = authService.onAuthStateChange(async (event, session) => {
+      this.currentUser = session?.user || null;
+      if (this.currentUser) {
+        const displayName = this.currentUser?.user_metadata?.display_name || this.currentUser?.email?.split('@')[0] || 'User';
+        sidebar.updateUser(displayName);
+        topbar.updateUser(displayName);
+        if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+          router.navigate('/');
+        }
+      } else {
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+          router.navigate('/login');
+        }
+      }
+    });
+  },
+
   async checkAuth() {
     const user = await authService.getCurrentUser();
     if (!user && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
       router.navigate('/login');
     }
     return user;
+  },
+
+  destroy() {
+    if (this.unsubscribeAuth) this.unsubscribeAuth();
   }
 };

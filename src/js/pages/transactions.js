@@ -101,7 +101,12 @@ export const transactionsPage = {
     const { data, error } = await transactionService.getAll();
     const tbody = document.getElementById('transaction-table-body');
     if (error || !data) { tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Gagal memuat</td></tr>'; return; }
-    if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-400">Tidak ada transaksi</td></tr>'; return; }
+    if (!data.length) { tbody.innerHTML = `
+        <tr><td colspan="5" class="px-6 py-12 text-center">
+          <span class="text-3xl mb-3 block">💳</span>
+          <p class="text-gray-500 font-medium">Belum ada transaksi</p>
+          <p class="text-gray-400 text-sm">Tambahkan transaksi pertama Anda</p>
+        </td></tr>`; return; }
     const { data: categories } = await categoryService.getAll();
     const catMap = {};
     (categories || []).forEach(c => { catMap[c.id] = c.name; });
