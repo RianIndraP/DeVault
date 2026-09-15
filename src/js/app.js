@@ -18,6 +18,10 @@ export const app = {
 
   async init() {
     console.log('[Finance Dashboard] Initializing...');
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
     this.currentUser = await authService.getCurrentUser();
     this.setupRouter();
     this.renderLayout();
@@ -46,16 +50,16 @@ export const app = {
     const appEl = document.getElementById('app');
     if (!appEl) return;
     if (!this.currentUser) {
-      appEl.innerHTML = '<div id="page-container"></div>';
+      appEl.innerHTML = '<div id="page-container" style="background:var(--canvas); min-height:100vh;"></div>';
       router.resolve();
       return;
     }
     appEl.innerHTML = `
-        <div class="flex min-h-screen" style="background:var(--bg)">
+      <div class="flex min-h-screen" style="background:var(--canvas)">
         <div id="sidebar-container"></div>
-        <div class="flex-1 flex flex-col" style="margin-left:250px">
+        <div class="flex-1 min-w-0 lg:ml-64">
           <div id="topbar-container"></div>
-          <main id="page-container" class="flex-1 p-4 md:p-6 lg:p-8 overflow-auto" style="background:var(--bg);color:var(--text)">
+          <main id="page-container" class="p-4 md:p-8 max-w-7xl mx-auto" style="color:var(--ink)"></main>
         </div>
       </div>
     `;
