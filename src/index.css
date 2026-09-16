@@ -1,100 +1,80 @@
 @import "tailwindcss";
 
 /* =========================================================
-   Design tokens Dompetku — sumber: mockup HTML
-   Tempel blok ini di file CSS global kamu (mis. src/style.css),
-   dan pastikan diimport SEBELUM Tailwind, atau taruh di :root
-   pada index.html sebelum <script> Tailwind.
+   Design tokens Dompetku — sumber: mockup HTML (versi indigo)
    ========================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
 
-:root {
-  --canvas: #F3F5EF;
-  --surface: #FFFFFF;
-  --surface-alt: #EAEFE7;
-  --border: #DEE4D8;
-  --ink: #16241C;
-  --ink-muted: #5B6B5F;
-  --emerald: #1F8A5D;
-  --emerald-strong: #146247;
-  --emerald-soft: #E4F3EB;
-  --coral: #C24E3D;
-  --coral-soft: #FBE7E2;
-  --amber: #B4790F;
-  --amber-soft: #FBEDD4;
-  --indigo: #3557C7;
-  --indigo-soft: #E7ECFB;
-  --shadow: 0 1px 2px rgba(22, 36, 28, .05);
+:root{
+  --canvas:#F6F5F1;
+  --surface:#FFFFFF;
+  --surface-alt:#EFEDE7;
+  --border:#E2DFD6;
+  --ink:#1C1B22;
+  --ink-muted:#6E6C78;
+  --emerald:#1E8F63; --emerald-strong:#136B49; --emerald-soft:#E1F3EA;
+  --coral:#C34C3C; --coral-soft:#FBE7E3;
+  --amber:#B6790F; --amber-soft:#FBEAD0;
+  --indigo:#4A5FD1; --indigo-soft:#E9EBFB;
+  --violet:#7C5CD6; --violet-soft:#EEE8FB;
+  --shadow:0 1px 2px rgba(28,27,34,.06), 0 8px 24px -12px rgba(28,27,34,.10);
 }
 
-html.dark {
-  --canvas: #0E1E19;
-  --surface: #16302A;
-  --surface-alt: #1C3A32;
-  --border: #2C4B40;
-  --ink: #EAF3EC;
-  --ink-muted: #9FBBAC;
-  --emerald: #3FD497;
-  --emerald-strong: #5FE0AC;
-  --emerald-soft: #1B3E33;
-  --coral: #FF8A76;
-  --coral-soft: #3A241F;
-  --amber: #F2B84B;
-  --amber-soft: #3B3120;
-  --indigo: #8CB0FF;
-  --indigo-soft: #20294A;
-  --shadow: 0 1px 2px rgba(0, 0, 0, .25);
+/* Dark = deep indigo/slate, sengaja TIDAK diberi rona hijau */
+html.dark{
+  --canvas:#12131E;
+  --surface:#1A1C2C;
+  --surface-alt:#222439;
+  --border:#33344E;
+  --ink:#EDEDF7;
+  --ink-muted:#9C9DBE;
+  --emerald:#3FD497; --emerald-strong:#66E0AC; --emerald-soft:#1B3A2E;
+  --coral:#FF8B79; --coral-soft:#3B2432;
+  --amber:#F2BB4E; --amber-soft:#3A2E1B;
+  --indigo:#8FA6FF; --indigo-soft:#232852;
+  --violet:#B29BF5; --violet-soft:#28224A;
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 12px 30px -14px rgba(0,0,0,.55);
 }
 
-* {
-  transition: background-color .25s ease, border-color .25s ease, color .25s ease;
-}
+*{ transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
+button { cursor: pointer; }
+body{ background:var(--canvas); color:var(--ink); font-family:'Inter',sans-serif; }
+.font-display{ font-family:'Fraunces',serif; }
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:var(--border); border-radius:99px; }
+.focus-ring:focus-visible{ outline:2px solid var(--indigo); outline-offset:2px; }
 
-body {
-  background: var(--canvas);
-  color: var(--ink);
-  font-family: 'Inter', sans-serif;
-}
+/* ---------- CARDS & INTERAKSI ---------- */
+.card{ background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow); }
+.card-hover{ transition: transform .18s ease, box-shadow .18s ease; }
+.card-hover:hover{ transform: translateY(-3px); box-shadow:0 16px 34px -16px rgba(0,0,0,.22); }
+.btn-press:active{ transform: scale(.97); }
 
-.font-display {
-  font-family: 'Fraunces', serif;
-}
+.bar-fill{ width:0%; transition: width 1s cubic-bezier(.22,1,.36,1); }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+.chip{ font-size:.75rem; font-weight:600; padding:.35rem .75rem; border-radius:999px; border:1px solid var(--border); color:var(--ink-muted); cursor:pointer; white-space:nowrap; background:transparent; }
+.chip.active{ background:var(--indigo); border-color:var(--indigo); color:#fff; }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 99px;
-}
+.navlink{ display:flex; align-items:center; gap:.75rem; padding:.5rem .75rem; border-radius:.55rem; color:var(--ink-muted); font-size:.875rem; cursor:pointer; text-decoration:none; }
+.navlink.active{ background:var(--indigo-soft); color:var(--indigo); font-weight:600; }
+.navlink:hover:not(.active){ background:var(--surface-alt); }
 
-.focus-ring:focus-visible {
-  outline: 2px solid var(--emerald);
-  outline-offset: 2px;
-}
+.switch{ width:40px; height:22px; border-radius:999px; background:var(--border); position:relative; cursor:pointer; transition:.2s; flex-shrink:0; }
+.switch.on{ background:var(--indigo); }
+.switch .dot{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.2s; }
+.switch.on .dot{ transform:translateX(18px); }
 
-/* Pemetaan nama variabel lama -> token baru, kalau file lain
-   (mis. pages/dashboard.js) masih memakai nama lama. Boleh dihapus
-   begitu semua tempat sudah dipindah ke nama token baru di atas. */
-:root {
-  --bg: var(--canvas);
-  --text: var(--ink);
-  --text-muted: var(--ink-muted);
-  --text-faint: var(--ink-muted);
-  --accent: var(--emerald);
-  --accent-soft: var(--emerald-soft);
-  --accent-2: var(--indigo);
-  --income: var(--emerald);
-  --income-soft: var(--emerald-soft);
-  --expense: var(--coral);
-  --expense-soft: var(--coral-soft);
-  --transfer: var(--indigo);
-  --transfer-soft: var(--indigo-soft);
-  --danger: var(--coral);
-  --danger-soft: var(--coral-soft);
-  --warning: var(--amber);
-  --warning-soft: var(--amber-soft);
-}
+.modal-backdrop{ background:rgba(10,10,16,.55); backdrop-filter:blur(2px); }
+
+.cat-row{ display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer; }
+.type-chip{ cursor:pointer; }
+.period-btn{ cursor:pointer; }
+
+/* ---------- animasi ---------- */
+.pulse-once{ animation: pulseOnce .7s ease; }
+@keyframes pulseOnce{ 0%{ box-shadow:0 0 0 0 var(--indigo-soft);} 70%{ box-shadow:0 0 0 14px transparent;} 100%{ box-shadow:0 0 0 0 transparent;} }
+.slide-in{ animation: slideIn .35s ease; }
+@keyframes slideIn{ from{ opacity:0; transform:translateY(-8px);} to{ opacity:1; transform:translateY(0);} }
+.fade-out{ animation: fadeOut .3s ease forwards; }
+@keyframes fadeOut{ to{ opacity:0; transform:scale(.96); max-height:0; margin:0; padding:0; } }
