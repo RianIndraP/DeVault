@@ -137,50 +137,79 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 
 ## Fitur yang Direncanakan
 
-### ✅ Selesai
-- Nomor 1: Setup Project JavaScript (Vite, ES Modules, Tailwind v4)
-- Nomor 2: Setup Tailwind CSS v4 dengan PostCSS
-- Nomor 3: Setup Supabase Client & Auth
-- Nomor 4: Database + RLS (9 tabel, policies, triggers, auto-create profile)
-- Nomor 5: Auth Pages (Register, Login, Logout dengan redirect)
-- Nomor 6: Layout Dashboard (Sidebar, Topbar, Responsive, CSS Variables)
-- Nomor 6b: Dashboard Design — Hero section, stat tiles, health gauge, activity feed, budgets, goals, insights
-- Nomor 6c: Theme Persistence — Dark/light theme saved to localStorage, auto-applied on load
-- Nomor 7-10: CRUD Pages (Accounts, Categories, Transactions, Dashboard)
-- Nomor 11-13: Budget, Goals, Reports pages
-- Nomor 14: Settings page
-- Nomor 15: Export/Import services (stub)
-- Nomor 16: OCR service (stub)
-- Nomor 17: Icons component (SVG icon library)
-- Nomor 18: Dashboard layout refactored to CSS Variables (bg-gray-50 → var(--bg))
+### ✅ Selesai (Fitur Inti — MVP)
+- **Nomor 1**: Setup Project JavaScript (Vite 5.2.0, ES Modules, Tailwind v4.3.3 via PostCSS)
+- **Nomor 2**: Setup Tailwind CSS v4 dengan PostCSS (tanpa tailwind.config.js)
+- **Nomor 3**: Setup Supabase Client & Auth (register, login, logout, onAuthStateChange, getCurrentUser)
+- **Nomor 4**: Database + RLS (9 tabel: profiles, accounts, categories, transactions, transaction_items, transfers, budgets, goals, recurring_transactions; policies, triggers, auto-create profile)
+- **Nomor 5**: Auth Pages (Register, Login, Logout dengan redirect, protected routes)
+- **Nomor 6**: Layout Dashboard (Sidebar navigasi, Topbar header, Responsive, CSS Variables untuk dark/light theme)
+- **Nomor 6b**: Dashboard Design — Hero gradient section, SVG health gauge, Chart.js line/bar charts, category breakdown, spending pattern analysis, activity feed dengan search/filter, budget status, goals dengan nabung button, insight otomatis, modal tambah transaksi, toast notifications, IntersectionObserver animate bars
+- **Nomor 6c**: Theme Persistence — Dark/light theme disimpan ke localStorage, auto-applied saat load
+- **Nomor 6d**: Icons Component — src/js/components/icons.js berisi 100+ SVG icon konsisten (stroke-width 1.8, viewBox 24x24, stroke=currentColor)
+- **Nomor 7-10**: CRUD Pages (accounts.js, categories.js, transactions.js, dashboard.js)
+- **Nomor 11-13**: Budget, Goals, Reports pages
+- **Nomor 14**: Settings page
+- **Nomor 15**: Export Service — exportService.exportToExcel(data) dan exportService.exportToPDF() sudah di-implementasikan di src/js/services/export.js, tapi belum terintegrasi ke UI
+- **Nomor 16**: OCR Service — ocrService.extractFromImage(imageFile) sudah di-implementasikan di src/js/services/ocr.js, tapi belum terintegrasi ke UI
 
-### 🔲 Belum Dikerjakan
-- Chart.js (Grafik harian, kategori, income vs expense)
-- Excel Export (download laporan .xlsx)
-- Excel Import (upload .xlsx / .csv)
-- OCR Receipt Scanning (implementasi Tesseract.js)
-- Insights (Analisis otomatis)
-- Recurring Transactions
-- Search & Filter
-- Advanced Reports
+### ✅ Selesai (Tambahan)
+- **CSS Variables**: --canvas, --surface, --surface-alt, --border, --ink, --ink-muted, --emerald, --coral, --amber, --indigo, --violet, --shadow untuk light/dark theme native
+- **Layout**: app.js pakai background:var(--canvas), margin-left:250px untuk sidebar alignment
+- **Components**: sidebar.js, topbar.js pakai CSS variables (bukan Tailwind gray classes)
+- **Dashboard**: 779 baris — Hero, health gauge SVG, Chart.js charts, category breakdown, spending pattern, activity feed, budget status, goals, insights, modal transaksi, toast, global events (search:changed, theme:changed, keydown:Escape)
+- **Animations**: .slide-in, .fade-out, .pulse-once, .card-hover, .btn-press keyframes di index.css
+- **Chart.js**: CDN di index.html, responsive charts dengan CSS variabel colors, empty data handling, period toggle (3/6 bulan)
+- **Global Events**: document.addEventListener untuk search:changed, theme:changed, keydown:Escape
+- **Health Score**: Rumus savingsScore × 0.65 + budgetScore × 0.35, ditampilkan sebagai SVG gauge
+- **Spending Pattern**: Rata-rata pengeluaran harian, hari paling boros/hemat, perbandingan akhir pekan vs hari biasa
+- **Automatic Insights**: Insight tentang budget terpakai, pola akhir pekan, target tercapai
 
-### ✅ Selesai (Tambahan Terakhir)
-- Theme persistence ke `localStorage` — dark/light mode tersimpan, auto-applied saat load
-- Dashboard design: Hero gradient section, stat tiles dengan accent bar, health gauge, sparkline, activity feed dengan SVG icons, budgets dengan status badges, goals section, insight cards
-- CSS custom properties untuk semua komponen (dark/light theming native)
-- Layout refactored: `bg-gray-50` → `var(--bg)` CSS variables
-- Sidebar/Topbar pakai CSS variables
-- `src/js/components/icons.js` — SVG icon library
+### 🔲 Belum Dikerjakan (Perlu Integrasi UI)
+
+#### Export/Import
+- **Excel Export** — exportService.exportToExcel(data) sudah ada di src/js/services/export.js tapi belum ada tombol di UI halaman manapun
+- **Excel Import** — Belum di-implementasikan sama sekali
+- **PDF Export** — exportService.exportToPDF() sudah ada tapi belum diintegrasikan ke UI
+- **Cara mengintegrasikan**: Tambahkan tombol di reports.js atau dashboard.js, panggil exportService.exportToExcel(data) dan exportService.exportToPDF() dengan data transaksi
+
+#### OCR Receipt Scanning
+- **OCR Service** — ocrService.extractFromImage(imageFile) sudah ada di src/js/services/ocr.js (menggunakan tesseract.js + dompurify) tapi belum ada tombol/fitur di UI
+- **Cara mengintegrasikan**: Tambahkan tombol Scan Struk di halaman transaksi, panggil ocrService.extractFromImage(file), parse hasilnya jadi object transaksi, lalu panggil transactionService.create() otomatis
+
+#### Recurring Transactions
+- **Tabel recurring_transactions** sudah ada di database.sql tapi belum ada:
+  - recurringTransactionService di database.js
+  - Halaman/render di sidebar atau menu lain
+  - CRUD interface
+- **Apa yang perlu dibuat**: Service CRUD di database.js, halaman src/js/pages/recurring.js, render di sidebar, dan logika eksekusi berulang
+
+#### Search & Filter Global
+- **Dashboard** sudah punya search lokal di activity feed dan category filter
+- **Belum ada**: Search & filter global yang menyebar ke semua halaman
+- **Apa yang perlu dibuat**: Global search state di app.js, event listener universal, debounce optimization
+
+#### Advanced Reports
+- **reports.js** sudah ada sebagai placeholder tapi belum di-implementasikan secara detail
+- **Belum ada**: Laporan detail (excel/pdf export, filter lanjutan, chart laporan, ringkasan per periode)
+
+### ✅ Selesai (Sudah Ada di Code tapi Perlu Verifikasi)
+- **Savings Rate Calculation** — Sudah ada di dashboard.js totals().savings = (net / income) × 100
+- **Financial Health Score** — Sudah ada di dashboard.js healthScore(totals), rumus: savingsScore × 0.65 + budgetScore × 0.35
+- **Automatic Insights** — Sudah ada di dashboard.js buildInsights(totals)
+- **Spending Pattern Analysis** — Sudah ada di dashboard.js spendingPattern()
+- **Category Icon Mapping** — Sudah ada di dashboard.js categoryIcon() dan goalIcon()
+- **Transaction Modal** — Sudah ada di dashboard.js openModal(), closeModal(), submitTransaction()
 
 ### Phase 2 (Setelah MVP Stabil)
-- Excel Import (preview & edit)
-- Receipt OCR (implementasi penuh)
-- Recurring Transactions
-- Spending Pattern Analysis
-- Savings Rate Calculation
-- Financial Health Score
-- Automatic Insights
-- Advanced Reports
+- Excel Import (preview & edit sebelum import)
+- Receipt OCR (implementasi penuh dengan UI scan)
+- Recurring Transactions (CRUD + execution)
+- Spending Pattern Analysis (detail di halaman reports)
+- Savings Rate Calculation (detail di halaman reports)
+- Financial Health Score (detail di halaman reports)
+- Automatic Insights (detail di halaman reports)
+- Advanced Reports (lengkap dengan export, filter, chart)
 
 ### Phase 3 (Masa Depan)
 - AI Financial Assistant
@@ -344,35 +373,39 @@ updated_at TIMESTAMPTZ
 ## Lisensi
 Proprietary - Personal Use
 
-## Developer Notes
-- Gunakan `npm run dev` untuk development
-- Gunakan `npm run build` untuk produksi
-- Selalu gunakan `.env` untuk credential Supabase (jangan commit ke Git)
-- Semua kode JavaScript menggunakan ES Modules (`import/export`)
-- `src/js/components/` berisi komponen UI yang bisa dipakai ulang (sidebar, topbar, icons)
-- `src/js/pages/` berisi halaman aplikasi (auth, dashboard, transactions, accounts, categories, budgets, goals, reports, settings)
-- `src/js/services/` berisi semua panggilan API (supabase, auth, database, export, ocr)
-- `src/index.css` berisi CSS custom properties (variabel) untuk dark/light theme dan semua kelas layout dashboard
-- `ensureProfile()` dipanggil otomatis sebelum setiap operasi database untuk memastikan profil pengguna ada
-- `profiles.id` menggunakan `auth.uid()` sehingga FK constraint selalu valid
-- Tailwind v4 menggunakan `@import "tailwindcss"` di CSS, diproses oleh `@tailwindcss/postcss` di Vite
-- `vite.config.js` memiliki `css: { postcss: './postcss.config.js' }` untuk integrasi PostCSS
-- `postcss.config.js` berisi `import { from } from '@tailwindcss/postcss'`
-- Supabase client menggunakan `@supabase/supabase-js` npm package, bukan CDN
-- Semua tabel memiliki RLS policies yang hanya mengizinkan akses oleh user yang bersangkutan
-- `db.update()` dan `db.delete()` menyertakan `eq('user_id', userId)` untuk RLS compliance
-- `transactionService.create()` dan `transactionService.addItem()` memanggil `ensureProfile()` sebelum insert
-- Semua data transaksi harus memiliki `source` field: `manual`, `excel`, atau `receipt`
-- `database.sql` harus dijalankan di Supabase SQL Editor sebelum aplikasi digunakan
-- `crypto.randomUUID()` tidak digunakan lagi — `profiles.id` menggunakan `auth.uid()`
-- Auto-create profile trigger: `on_auth_user_created` di `auth.users`
-- `src/js/components/icons.js` — library icon SVG, setiap icon punya key dan nilai SVG string
-- `localStorage.setItem('theme', 'dark'|'light')` menyimpan preferensi tema
-- `document.documentElement.classList.toggle('dark')` mengaktifkan tema gelap
-- CSS custom properties di `:root` dan `html.dark` mendukung dark/light theme
+- Gunakan npm run dev untuk development
+- Gunakan npm run build untuk produksi
+- Selalu gunakan .env untuk credential Supabase (jangan commit ke Git)
+- Semua kode JavaScript menggunakan ES Modules (import/export)
+- src/js/components/ berisi komponen UI yang bisa dipakai ulang (sidebar, topbar, icons.js)
+- src/js/pages/ berisi halaman aplikasi (auth, dashboard, transactions, accounts, categories, budgets, goals, reports, settings)
+- src/js/services/ berisi semua panggilan API (supabase, auth, database, export, ocr)
+- src/index.css berisi CSS custom properties (variabel) untuk dark/light theme dan semua kelas layout dashboard
+- src/js/services/export.js — exportToExcel() dan exportToPDF() sudah di-implementasikan tapi belum terintegrasi ke UI
+- src/js/services/ocr.js — extractFromImage() sudah di-implementasikan tapi belum terintegrasi ke UI
+- src/js/components/icons.js — library icon SVG, setiap icon punya key dan nilai SVG string
+- localStorage.setItem("theme", "dark"|"light") menyimpan preferensi tema
+- document.documentElement.classList.toggle("dark") mengaktifkan tema gelap
+- CSS custom properties di :root dan html.dark mendukung dark/light theme
 - Semua komponen UI (sidebar, topbar, dashboard) menggunakan CSS variables bukan Tailwind gray classes
-- `src/index.css` berisi CSS variabel + semua kelas layout dashboard (`.hero`, `.stat-grid`, `.tile`, `.card`, `.grid-2`, `.activity-row`, `.acct-row`, `.budget-item`, `.goal-item`, `.insight-grid`, `.gauge-row`, `.bar-track`, dll.)
-- Dashboard menggunakan hero gradient section, stat tiles, health gauge, sparkline canvas, activity feed dengan SVG icons
+- Dashboard menggunakan hero gradient section, health gauge SVG, Chart.js line/bar charts, spending pattern analysis, insight otomatis, modal tambah transaksi
+- ensureProfile() dipanggil otomatis sebelum setiap operasi database untuk memastikan profil pengguna ada
+- profiles.id menggunakan auth.uid() sehingga FK constraint selalu valid
+- Tailwind v4 menggunakan @import "tailwindcss" di CSS, diproses oleh @tailwindcss/postcss di Vite
+- vite.config.js memiliki css: { postcss: "./postcss.config.js" } untuk integrasi PostCSS
+- postcss.config.js berisi import { from } from "@tailwindcss/postcss"
+- Supabase client menggunakan @supabase/supabase-js npm package, bukan CDN
+- Semua tabel memiliki RLS policies yang hanya mengizinkan akses oleh user yang bersangkutan
+- db.update() dan db.delete() menyertakan eq("user_id", userId) untuk RLS compliance
+- transactionService.create() dan transactionService.addItem() memanggil ensureProfile() sebelum insert
+- Semua data transaksi harus memiliki source field: manual, excel, atau receipt
+- database.sql harus dijalankan di Supabase SQL Editor sebelum aplikasi digunakan
+- crypto.randomUUID() tidak digunakan lagi — profiles.id menggunakan auth.uid()
+- Auto-create profile trigger: on_auth_user_created di auth.users
+- Chart.js dimuat via CDN di index.html, tidak via npm
+- src/js/components/icons.js menggunakan fungsi icon(name, cls) untuk render SVG
+- Dashboard menggunakan IntersectionObserver untuk animate progress bars saat terlihat
+- Global event listeners: search:changed, theme:changed, keydown: Escape
 
 ## Git History
 - `5ff2cdc` — feat: persist theme preference to localStorage, add icons.js component
