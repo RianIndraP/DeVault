@@ -10,11 +10,13 @@ import { categoriesPage } from './pages/categories.js';
 import { budgetsPage } from './pages/budgets.js';
 import { goalsPage } from './pages/goals.js';
 import { reportsPage } from './pages/reports.js';
+import { recurringPage } from './pages/recurring.js';
 import { settingsPage } from './pages/settings.js';
 
 export const app = {
   currentUser: null,
   unsubscribeAuth: null,
+  globalSearchQuery: '',
 
   async init() {
     console.log('[Finance Dashboard] Initializing...');
@@ -26,6 +28,8 @@ export const app = {
     this.setupRouter();
     this.renderLayout();
     this.setupAuthListener();
+    this.setupGlobalSearch();
+    this.executeRecurringTransactions();
     await this.checkAuth();
   },
 
@@ -39,6 +43,7 @@ export const app = {
       '/budgets': budgetsPage,
       '/goals': goalsPage,
       '/reports': reportsPage,
+      '/recurring': recurringPage,
       '/settings': settingsPage,
       '/login': authPage,
       '/register': authPage
@@ -92,6 +97,27 @@ export const app = {
       router.navigate('/login');
     }
     return user;
+  },
+
+  setupGlobalSearch() {
+    document.addEventListener('search:changed', async (e) => {
+      this.globalSearchQuery = e.detail.query;
+      if (window.location.pathname !== '/dashboard') return;
+      const event = new CustomEvent('global-search', { detail: { query: this.globalSearchQuery } });
+      document.dispatchEvent(event);
+    });
+  },
+
+  async executeRecurringTransactions() {
+    try {
+      const { recurringTransactionService } = await import('./services/database.js');
+      const { data } = await recurringTransactionService.executeNext();
+      if (data && data.length > 0) {
+        console.log(`[Recurring] ${data.length} transaksi berulang dieksekusi.`);
+      }
+    } catch (e) {
+      console.warn('[Recurring] Could not execute recurring transactions:', e.message);
+    }
   },
 
   destroy() {

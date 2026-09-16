@@ -4,6 +4,8 @@ import { transactionService } from '../services/database.js';
 import { categoryService } from '../services/database.js';
 import { budgetService } from '../services/database.js';
 import { goalService } from '../services/database.js';
+import { exportService } from '../services/export.js';
+import { ocrService } from '../services/ocr.js';
 import { icon } from '../components/icons.js';
 
 // ⚠️ CATATAN: dashboard ini memanggil transactionService.create(),
@@ -53,15 +55,26 @@ export const dashboardPage = {
     const displayName = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'User';
 
     container.innerHTML = `
-      <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
-        <div>
-          <h1 class="font-display text-3xl font-semibold" style="color:var(--ink)">Selamat datang, ${displayName}</h1>
-          <p class="mt-1 text-sm" style="color:var(--ink-muted)">Begini kondisi keuanganmu bulan ini.</p>
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h1 class="font-display text-3xl font-semibold" style="color:var(--ink)">Selamat datang, ${displayName}</h1>
+            <p class="mt-1 text-sm" style="color:var(--ink-muted)">Begini kondisi keuanganmu bulan ini.</p>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="btn-add-tx" class="text-sm font-medium px-4 py-2 rounded-lg focus-ring btn-press flex items-center gap-1.5" style="background:var(--indigo); color:#fff;">
+              ${icon('plus', 'w-4 h-4')} Tambah transaksi
+            </button>
+            <button id="btn-export-excel" class="text-sm font-medium px-3 py-2 rounded-lg focus-ring btn-press flex items-center gap-1.5" style="background:var(--emerald); color:#fff;">
+              ${icon('download', 'w-4 h-4')} Excel
+            </button>
+            <button id="btn-export-pdf" class="text-sm font-medium px-3 py-2 rounded-lg focus-ring btn-press flex items-center gap-1.5" style="background:var(--coral); color:#fff;">
+              ${icon('file', 'w-4 h-4')} PDF
+            </button>
+            <button id="btn-scan-receipt" class="text-sm font-medium px-3 py-2 rounded-lg focus-ring btn-press flex items-center gap-1.5" style="background:var(--amber); color:#fff;">
+              ${icon('camera', 'w-4 h-4')} Scan Struk
+            </button>
+          </div>
         </div>
-        <button id="btn-add-tx" class="text-sm font-medium px-4 py-2 rounded-lg focus-ring btn-press flex items-center gap-1.5" style="background:var(--indigo); color:#fff;">
-          ${icon('plus', 'w-4 h-4')} Tambah transaksi
-        </button>
-      </div>
 
       <!-- HERO -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
@@ -677,23 +690,42 @@ export const dashboardPage = {
     document.getElementById('tx-modal-backdrop').addEventListener('click', () => this.closeModal());
     document.querySelectorAll('.tx-type-btn').forEach(b => b.addEventListener('click', () => this.setTxType(b.dataset.txtype)));
     document.getElementById('tx-form').addEventListener('submit', (e) => this.submitTransaction(e));
+
+    document.getElementById('btn-export-excel').addEventListener('click', () => this.exportExcel());
+    document.getElementById('btn-export-pdf').addEventListener('click', () => this.exportPDF());
+    document.getElementById('btn-scan-receipt').addEventListener('click', () => this.scanReceipt());
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.id = 'ocr-file-input';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', (e) => this.handleOCRFile(e));
+    document.body.appendChild(fileInput);
   },
 
-  bindGlobalListenersOnce() {
-    if (this._globalListenersBound) return;
-    this._globalListenersBound = true;
-    document.addEventListener('search:changed', (e) => {
-      const input = document.getElementById('activity-search');
-      if (!input) return; // halaman lain sedang aktif
-      input.value = e.detail.query;
-      this.ui.search = e.detail.query;
-      this.renderActivity();
-    });
-    document.addEventListener('theme:changed', () => {
-      if (document.getElementById('ie-chart')) this.renderCharts();
-    });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeModal(); });
-  },
+   bindGlobalListenersOnce() {
+     if (this._globalListenersBound) return;
+     this._globalListenersBound = true;
+     document.addEventListener('search:changed', (e) => {
+       const input = document.getElementById('activity-search');
+       if (!input) return;
+       input.value = e.detail.query;
+       this.ui.search = e.detail.query;
+       this.renderActivity();
+     });
+     document.addEventListener('global-search', (e) => {
+       const input = document.getElementById('activity-search');
+       if (!input) return;
+       input.value = e.detail.query;
+       this.ui.search = e.detail.query;
+       this.renderActivity();
+     });
+     document.addEventListener('theme:changed', () => {
+       if (document.getElementById('ie-chart')) this.renderCharts();
+     });
+     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeModal(); });
+   },
 
   renderCompare() {
     const series = this.monthlySeries(2);
@@ -779,5 +811,59 @@ export const dashboardPage = {
     } finally {
       submitBtn.disabled = false;
     }
+  },
+
+  async exportExcel() {
+    const month = new Date().getMonth() + 1;
+    const year = new Date().getFullYear();
+    const { data: transactions } = await transactionService.getByMonth(month, year);
+    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    try {
+      await exportService.exportToExcel(transactions.map(t => ({ date: t.date, description: t.description, type: t.type, amount: Number(t.amount), category_id: t.category_id })));
+      this.toast('Excel berhasil diekspor!', 'emerald');
+    } catch (e) { this.toast('Gagal export Excel.', 'coral'); }
+  },
+
+  async exportPDF() {
+    const month = new Date().getMonth() + 1;
+    const year = new Date().getFullYear();
+    const { data: transactions } = await transactionService.getByMonth(month, year);
+    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    try {
+      await exportService.exportToPDF();
+      this.toast('PDF berhasil diekspor!', 'emerald');
+    } catch (e) { this.toast('Gagal export PDF.', 'coral'); }
+  },
+
+  async scanReceipt() {
+    const input = document.getElementById('ocr-file-input');
+    if (input) input.click();
+  },
+
+  async handleOCRFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    this.toast('Sedang memindai struk...', 'indigo');
+    try {
+      const result = await ocrService.extractFromImage(file);
+      if (result.items.length > 0) {
+        const total = result.items.reduce((s, item) => s + (item.amount || 0), 0);
+        this.toast(`Struk terdeteksi: ${result.items.length} item, total Rp${Math.round(total).toLocaleString('id-ID')}`, 'emerald');
+        const desc = result.items.map(i => i.description).join(', ').substring(0, 100);
+        this.openModal();
+        setTimeout(() => {
+          const amtInput = document.getElementById('tx-amount');
+          if (amtInput) amtInput.value = Math.round(total);
+          const descInput = document.getElementById('tx-desc');
+          if (descInput) descInput.value = desc;
+        }, 500);
+      } else {
+        this.toast('Tidak ada angka yang terdeteksi dari struk.', 'amber');
+      }
+    } catch (err) {
+      console.error(err);
+      this.toast('Gagal scan struk. Coba lagi.', 'coral');
+    }
+    e.target.value = '';
   }
 };

@@ -23,10 +23,7 @@ export const router = {
   updateActiveLink(path) {
     document.querySelectorAll('[data-route]').forEach(el => {
       const isActive = el.getAttribute('data-route') === path;
-      el.classList.toggle('bg-blue-50', isActive);
-      el.classList.toggle('text-blue-700', isActive);
-      el.classList.toggle('font-semibold', isActive);
-      el.classList.toggle('text-gray-500', !isActive);
+      el.classList.toggle('active', isActive);
     });
   }
 };

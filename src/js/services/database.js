@@ -152,3 +152,44 @@ export const goalService = {
   async update(id, updates) { return db.update('goals', id, updates); },
   async delete(id) { return db.delete('goals', id); }
 };
+
+export const recurringTransactionService = {
+  async getAll() {
+    const result = await db.from('recurring_transactions');
+    const { data, error } = await result;
+    if (error) return { data: null, error };
+    return { data: data || [], error: null };
+  },
+  async create(rt) { return db.insert('recurring_transactions', rt); },
+  async update(id, updates) { return db.update('recurring_transactions', id, updates); },
+  async delete(id) { return db.delete('recurring_transactions', id); },
+  async executeNext() {
+    const now = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('recurring_transactions')
+      .select('*')
+      .eq('active', true)
+      .lte('next_date', now);
+    if (error || !data) return { data: null, error };
+    const executed = [];
+    for (const rt of data) {
+      const { data: tx, error: txErr } = await supabase
+        .from('transactions').insert([{
+          user_id: rt.user_id, account_id: rt.account_id, category_id: rt.category_id,
+          type: rt.type, amount: rt.amount, description: rt.description + ' (repeat)',
+          date: now, month: parseInt(now.split('-')[1]), year: parseInt(now.split('-')[0]),
+          source: 'recurring'
+        }]).select().single();
+      if (!txErr && tx) {
+        const nextDate = new Date(now);
+        if (rt.frequency === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+        else if (rt.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+        else if (rt.frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
+        else if (rt.frequency === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
+        await supabase.from('recurring_transactions').update({ next_date: nextDate.toISOString().split('T')[0] }).eq('id', rt.id);
+        executed.push(tx);
+      }
+    }
+    return { data: executed, error: null };
+  }
+};

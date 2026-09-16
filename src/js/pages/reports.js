@@ -1,48 +1,69 @@
 import { transactionService } from '../services/database.js';
+import { exportService } from '../services/export.js';
+import { icon } from '../components/icons.js';
 
 export const reportsPage = {
   async render() {
     const container = document.getElementById('page-container');
     if (!container) return;
     container.innerHTML = `
-      <div class="max-w-7xl mx-auto">
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-gray-800">Laporan</h2>
-          <p class="text-gray-500 mt-1">Lihat laporan keuangan per bulan</p>
+      <div>
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+          <div>
+            <h1 class="font-display text-3xl font-semibold" style="color:var(--ink)">Laporan</h1>
+            <p class="mt-1 text-sm" style="color:var(--ink-muted)">Lihat laporan keuangan per bulan</p>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-export-excel" class="text-sm font-medium px-4 py-2 rounded-lg focus-ring btn-press flex items-center gap-1.5" style="background:var(--emerald); color:#fff;">
+              ${icon('download', 'w-4 h-4')} Export Excel
+            </button>
+            <button id="btn-export-pdf" class="text-sm font-medium px-4 py-2 rounded-lg focus-ring btn-press flex items-center gap-1.5" style="background:var(--coral); color:#fff;">
+              ${icon('file', 'w-4 h-4')} Export PDF
+            </button>
+          </div>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="card card-hover rounded-2xl p-6 mb-6">
           <div class="flex flex-wrap gap-4 items-end">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
-              <select id="report-month" class="px-3 py-2 border border-gray-300 rounded-lg">
+              <label class="text-xs font-medium block mb-1" style="color:var(--ink-muted)">Bulan</label>
+              <select id="report-month" class="w-full rounded-lg px-3 py-2 text-sm outline-none" style="background:var(--surface-alt); border:1px solid var(--border); color:var(--ink)">
                 ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}">${new Date(2024, i).toLocaleString('id-ID', {month: 'long'})}</option>`).join('')}
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
-              <input type="number" id="report-year" class="px-3 py-2 border border-gray-300 rounded-lg" value="2025" min="2000" max="2030" />
+              <label class="text-xs font-medium block mb-1" style="color:var(--ink-muted)">Tahun</label>
+              <input type="number" id="report-year" class="w-full rounded-lg px-3 py-2 text-sm outline-none" value="${new Date().getFullYear()}" min="2000" max="2030" style="background:var(--surface-alt); border:1px solid var(--border); color:var(--ink)" />
             </div>
-            <button id="btn-generate-report" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Lihat Laporan</button>
+            <button id="btn-generate-report" class="text-sm font-medium px-4 py-2 rounded-lg focus-ring btn-press" style="background:var(--indigo); color:#fff;">Lihat Laporan</button>
           </div>
         </div>
-        <div id="report-results" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-            <p class="text-sm text-gray-500">Total Pemasukan</p>
-            <p class="text-2xl font-bold text-green-600" id="report-income">Rp 0</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6" id="report-cards">
+          <div class="rounded-xl p-4" style="background:var(--surface-alt)">
+            <p class="text-xs" style="color:var(--ink-muted)">Total Pemasukan</p>
+            <p class="font-display text-2xl font-semibold mt-0.5" style="color:var(--emerald)" id="report-income">Rp0</p>
           </div>
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-            <p class="text-sm text-gray-500">Total Pengeluaran</p>
-            <p class="text-2xl font-bold text-red-600" id="report-expense">Rp 0</p>
+          <div class="rounded-xl p-4" style="background:var(--surface-alt)">
+            <p class="text-xs" style="color:var(--ink-muted)">Total Pengeluaran</p>
+            <p class="font-display text-2xl font-semibold mt-0.5" style="color:var(--coral)" id="report-expense">Rp0</p>
           </div>
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-            <p class="text-sm text-gray-500">Net Savings</p>
-            <p class="text-2xl font-bold text-blue-700" id="report-net">Rp 0</p>
+          <div class="rounded-xl p-4" style="background:var(--surface-alt)">
+            <p class="text-xs" style="color:var(--ink-muted)">Net Savings</p>
+            <p class="font-display text-2xl font-semibold mt-0.5" style="color:var(--ink)" id="report-net">Rp0</p>
           </div>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-4">
-          <h3 class="font-semibold text-gray-800 mb-3">Detail Transaksi</h3>
-          <div id="report-details" class="space-y-2">
-            <p class="text-gray-400">Pilih bulan dan tahun, lalu klik "Lihat Laporan"</p>
+        <div class="card card-hover rounded-2xl p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Detail Transaksi</h3>
+            <span id="report-count" class="text-xs font-medium" style="color:var(--ink-muted)"></span>
+          </div>
+          <div id="report-details" class="space-y-1">
+            <p class="text-sm" style="color:var(--ink-muted)">Pilih bulan dan tahun, lalu klik "Lihat Laporan"</p>
+          </div>
+        </div>
+        <div class="card card-hover rounded-2xl p-6">
+          <h3 class="font-display text-lg font-semibold mb-4" style="color:var(--ink)">Ringkasan Kategori</h3>
+          <div id="report-category-summary" class="space-y-3">
+            <p class="text-sm" style="color:var(--ink-muted)">Pilih bulan dan tahun untuk melihat ringkasan</p>
           </div>
         </div>
       </div>
@@ -52,7 +73,11 @@ export const reportsPage = {
 
   attachEvents() {
     const btn = document.getElementById('btn-generate-report');
+    const btnExcel = document.getElementById('btn-export-excel');
+    const btnPdf = document.getElementById('btn-export-pdf');
     if (btn) btn.addEventListener('click', () => this.generate());
+    if (btnExcel) btnExcel.addEventListener('click', () => this.exportExcel());
+    if (btnPdf) btnPdf.addEventListener('click', () => this.exportPDF());
   },
 
   async generate() {
@@ -62,21 +87,77 @@ export const reportsPage = {
     if (error || !transactions) return;
     const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
     const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
-    document.getElementById('report-income').textContent = `Rp ${Number(income).toLocaleString('id-ID')}`;
-    document.getElementById('report-expense').textContent = `Rp ${Number(expense).toLocaleString('id-ID')}`;
-    document.getElementById('report-net').textContent = `Rp ${Number(income - expense).toLocaleString('id-ID')}`;
+    const net = income - expense;
+    const el = (id) => document.getElementById(id);
+    if (el('report-income')) el('report-income').textContent = 'Rp' + Math.round(income).toLocaleString('id-ID');
+    if (el('report-expense')) el('report-expense').textContent = 'Rp' + Math.round(expense).toLocaleString('id-ID');
+    if (el('report-net')) el('report-net').textContent = 'Rp' + Math.round(net).toLocaleString('id-ID');
     const details = document.getElementById('report-details');
-    if (!transactions.length) { details.innerHTML = `
-      <div class="bg-gray-50 rounded-xl p-8 text-center">
-        <span class="text-3xl mb-3 block">📄</span>
-        <p class="text-gray-500">Tidak ada transaksi untuk bulan ini</p>
-        <p class="text-gray-400 text-sm">Tambahkan transaksi untuk melihat laporan</p>
-      </div>`; return; }
-    details.innerHTML = transactions.map(t => `
-      <div class="flex justify-between py-2 border-b border-gray-100 text-sm">
-        <span>${new Date(t.date).toLocaleDateString('id-ID')} - ${t.description || '-'}</span>
-        <span class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">Rp ${Number(t.amount).toLocaleString('id-ID')}</span>
+    const count = document.getElementById('report-count');
+    if (count) count.textContent = `${transactions.length} transaksi`;
+    if (!transactions.length) {
+      if (details) details.innerHTML = `<div class="rounded-xl p-8 text-center" style="background:var(--surface-alt)"><p class="text-sm" style="color:var(--ink-muted)">Tidak ada transaksi untuk bulan ini</p></div>`;
+      const catSum = document.getElementById('report-category-summary');
+      if (catSum) catSum.innerHTML = `<p class="text-sm" style="color:var(--ink-muted)">Tidak ada data</p>`;
+      return;
+    }
+    if (details) details.innerHTML = transactions.map(t => `
+      <div class="flex items-center justify-between py-2.5" style="border-bottom:1px solid var(--border)">
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:${t.type === 'income' ? 'var(--emerald-soft)' : 'var(--coral-soft)'}; color:${t.type === 'income' ? 'var(--emerald)' : 'var(--coral)'}">${icon(t.type, 'w-4 h-4')}</span>
+          <div>
+            <p class="text-sm font-medium" style="color:var(--ink)">${t.description || '-'}</p>
+            <p class="text-xs" style="color:var(--ink-muted)">${new Date(t.date).toLocaleDateString('id-ID')} · ${t.category_id || ''}</p>
+          </div>
+        </div>
+        <span class="text-sm font-semibold tabular-nums" style="color:${t.type === 'income' ? 'var(--emerald)' : 'var(--coral)'}">${t.type === 'income' ? '+' : '-'}Rp${Number(t.amount).toLocaleString('id-ID')}</span>
       </div>
     `).join('');
+    const catSum = document.getElementById('report-category-summary');
+    if (catSum) {
+      const catMap = {};
+      transactions.filter(t => t.type === 'expense').forEach(t => { catMap[t.category_id] = (catMap[t.category_id] || 0) + Number(t.amount); });
+      const totalExp = Object.values(catMap).reduce((s, v) => s + v, 0) || 1;
+      const colors = ['var(--indigo)', 'var(--emerald)', 'var(--coral)', 'var(--amber)', 'var(--violet)', 'var(--ink-muted)'];
+      catSum.innerHTML = Object.entries(catMap).map(([catId, amt], i) => `
+        <div class="flex items-center justify-between py-2">
+          <span class="text-sm" style="color:var(--ink)">Kategori ${catId}</span>
+          <span class="text-sm font-semibold tabular-nums" style="color:var(--ink)">Rp${Math.round(amt).toLocaleString('id-ID')} (${Math.round(amt / totalExp * 100)}%)</span>
+        </div>
+      `).join('') || '<p class="text-sm" style="color:var(--ink-muted)">Tidak ada pengeluaran</p>';
+    }
+  },
+
+  async exportExcel() {
+    const month = document.getElementById('report-month').value;
+    const year = document.getElementById('report-year').value;
+    const { data: transactions } = await transactionService.getByMonth(parseInt(month), parseInt(year));
+    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    try {
+      await exportService.exportToExcel(transactions.map(t => ({ date: t.date, description: t.description, type: t.type, amount: Number(t.amount), category_id: t.category_id })));
+      this.toast('Excel berhasil diekspor!', 'emerald');
+    } catch (e) { this.toast('Gagal export Excel.', 'coral'); }
+  },
+
+  async exportPDF() {
+    const month = document.getElementById('report-month').value;
+    const year = document.getElementById('report-year').value;
+    const { data: transactions } = await transactionService.getByMonth(parseInt(month), parseInt(year));
+    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    try {
+      await exportService.exportToPDF();
+      this.toast('PDF berhasil diekspor!', 'emerald');
+    } catch (e) { this.toast('Gagal export PDF.', 'coral'); }
+  },
+
+  toast(msg, tone = 'indigo') {
+    const stack = document.getElementById('toast-stack') || document.body;
+    const el = document.createElement('div');
+    el.className = 'slide-in rounded-lg px-4 py-3 text-sm font-medium card';
+    el.style.borderLeft = `4px solid var(--${tone})`;
+    el.style.color = 'var(--ink)';
+    el.textContent = msg;
+    stack.appendChild(el);
+    setTimeout(() => { el.classList.add('fade-out'); setTimeout(() => el.remove(), 320); }, 2600);
   }
 };
