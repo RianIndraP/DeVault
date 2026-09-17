@@ -102,7 +102,6 @@ export const app = {
   setupGlobalSearch() {
     document.addEventListener('search:changed', async (e) => {
       this.globalSearchQuery = e.detail.query;
-      if (window.location.pathname !== '/dashboard') return;
       const event = new CustomEvent('global-search', { detail: { query: this.globalSearchQuery } });
       document.dispatchEvent(event);
     });
