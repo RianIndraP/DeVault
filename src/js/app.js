@@ -64,7 +64,6 @@ export const app = {
     sidebar.render();
     topbar.render();
     tutorialPanel.render();
-    setTimeout(() => tutorialPanel.setContent({}), 100);
     router.resolve();
   },
 
