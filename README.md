@@ -27,13 +27,14 @@ Aplikasi web manajemen keuangan pribadi berbasis JavaScript + Supabase. Membantu
 | jspdf | ^3.0.0 | Export PDF | ✅ Dependency terpasang |
 | tesseract.js | ^6.0.0 | OCR - pembacaan teks dari gambar struk | ✅ Dependency terpasang |
 | dompurify | ^3.1.6 | Keamanan - sanitasi HTML input | ✅ Dependency terpasang |
-| Chart.js | ^4.4.0 | Visualisasi grafik | 🔲 Belum |
+| Chart.js | ^4.4.0 | Visualisasi grafik | ✅ Terintegrasi di dashboard |
 
 ## Struktur Project
 
 ```
 personal-finance-dashboard/
-├── index.html              ← File utama HTML (entry point)
+├── index.html              ← File utama HTML (entry point + Chart.js CDN)
+├── transactions.html       ← Standalone HTML (standalone transactions page, Supabase CDN)
 ├── package.json            ← Dependency & script commands
 ├── vite.config.js          ← Konfigurasi Vite (PostCSS + Tailwind v4)
 ├── postcss.config.js       ← PostCSS config (@tailwindcss/postcss)
@@ -41,33 +42,39 @@ personal-finance-dashboard/
 ├── .env.example            ← Template variabel environment
 ├── .gitignore              ← File yang tidak di-commit ke Git
 ├── database.sql            ← Schema SQL Supabase (9 tabel + RLS + triggers)
-├── public/                 ← File statis (favicon, gambar)
+├── public/                 ← File statis (favicon)
+├── dist/                   ← Build output
 └── src/
     ├── main.js             ← Titik masuk JavaScript
-    ├── index.css           ← Styles (CSS variables + layout classes)
+    ├── index.css           ← Styles (CSS variables + layout classes + Tailwind)
     └── js/
-        ├── app.js          ← Inisialisasi aplikasi utama (routing)
+        ├── app.js          ← Inisialisasi aplikasi utama (routing, layout)
         ├── router.js       ← Client-side router
         ├── components/     ← Komponen UI yang bisa dipakai ulang
-        │   ├── sidebar.js      ← Sidebar navigasi
-        │   ├── topbar.js       ← Topbar header
-        │   └── icons.js        ← Library icon SVG
+        │   ├── sidebar.js      ← Sidebar navigasi (updateUser, attachEvents, setOpen, logout)
+        │   ├── topbar.js       ← Topbar header (theme toggle, user info)
+        │   ├── icons.js        ← Library icon SVG (40+ icons, stroke-width 1.8, viewBox 24x24)
+        │   ├── toast.js        ← Shared toast notification component (showToast)
+        │   └── tutorial.js     ← Tutorial panel component (setContent, render, setOpen)
         ├── pages/          ← Halaman aplikasi
         │   ├── auth.js         ← Register, Login, Logout
-        │   ├── dashboard.js    ← Dashboard dengan statistik & ringkasan akun
-        │   ├── transactions.js ← CRUD transaksi + transaction items
-        │   ├── accounts.js     ← CRUD akun (bank, e-wallet, cash)
-        │   ├── categories.js   ← CRUD kategori
-        │   ├── budgets.js      ← Budget per kategori
-        │   ├── goals.js        ← Target tabungan
-        │   ├── reports.js      ← Laporan bulanan
-        │   └── settings.js     ← Pengaturan
-        └── services/       ← Layanan API & integrasi
-            ├── supabase.js   ← Client Supabase (createClient)
-            ├── auth.js       ← Layanan autentikasi
-            ├── database.js   ← CRUD service semua tabel (accounts, categories, transactions, budgets, goals)
-            ├── export.js     ← Excel/PDF export service
-            └── ocr.js        ← OCR receipt scanning service
+        │   ├── dashboard.js    ← Dashboard: hero, gauge, Chart.js, insights, modal, toast
+        │   ├── transactions.js ← CRUD transaksi: stat cards, filters, sort, modal, export, tutorial
+        │   ├── accounts.js     ← CRUD akun: stat cards, chips, search, modal, tutorial
+        │   ├── categories.js   ← CRUD kategori: grid, search, sort, icons, tutorial
+        │   ├── budgets.js      ← Budget per kategori (minimal, placeholder)
+        │   ├── goals.js        ← Target tabungan (minimal, placeholder)
+        │   ├── recurring.js    ← Transaksi berulang (icon + rupiah from utils)
+        │   ├── reports.js      ← Laporan bulanan: Chart.js, Excel/CSV import, export, preview
+        │   └── settings.js     ← Pengaturan (minimal, placeholder)
+        ├── services/       ← Layanan API & integrasi
+        │   ├── supabase.js   ← Client Supabase (createClient)
+        │   ├── auth.js       ← Layanan autentikasi (onAuthStateChange)
+        │   ├── database.js   ← CRUD service semua tabel (accounts, categories, transactions, budgets, goals, recurring)
+        │   ├── export.js     ← Excel/PDF export service (exportToExcel, exportToPDF)
+        │   └── ocr.js        ← OCR receipt scanning service (extractFromImage)
+        ├── utils.js         ← Shared helper functions (rupiah, withAlpha, categoryIcon, goalIcon, accountIcon, accountTypeLabel)
+        └── store/           ← Empty directory (reserved for state management)
 ```
 
 ## Cara Menjalankan
@@ -106,9 +113,9 @@ npm run preview
 - **Menggunakan `@tailwindcss/postcss`** (via PostCSS) untuk memproses Tailwind di Vite
 
 File konfigurasi:
-- `src/index.css` — hanya berisi `@import "tailwindcss"`
+- `src/index.css` — berisi `@import "tailwindcss"` + CSS custom properties
 - `vite.config.js` — `css: { postcss: './postcss.config.js' }`
-- `postcss.config.js` — berisi `import { from } from '@tailwindcss/postcss'`
+- `postcss.config.js` — berisi `import tailwindcss from '@tailwindcss/postcss'`
 - `tailwind.config.js` — **tidak diperlukan**
 
 ## Konfigurasi Supabase
@@ -116,8 +123,8 @@ File konfigurasi:
 ### Database Schema
 9 tabel dengan RLS lengkap:
 - `profiles` — Profil pengguna (id = auth.uid())
-- `accounts` — Sumber uang (bank, e-wallet, cash)
-- `categories` — Kategori transaksi buatan pengguna
+- `accounts` — Sumber uang (bank, e-wallet, cash, other)
+- `categories` — Kategori transaksi buatan pengguna (icon: SVG path string, bukan emoji)
 - `transactions` — Catatan transaksi utama (income, expense, transfer, adjustment)
 - `transaction_items` — Detail item per transaksi expense
 - `transfers` — Transfer antar akun
@@ -146,60 +153,73 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 - **Nomor 6**: Layout Dashboard (Sidebar navigasi, Topbar header, Responsive, CSS Variables untuk dark/light theme)
 - **Nomor 6b**: Dashboard Design — Hero gradient section, SVG health gauge, Chart.js line/bar charts, category breakdown, spending pattern analysis, activity feed dengan search/filter, budget status, goals dengan nabung button, insight otomatis, modal tambah transaksi, toast notifications, IntersectionObserver animate bars
 - **Nomor 6c**: Theme Persistence — Dark/light theme disimpan ke localStorage, auto-applied saat load
-- **Nomor 6d**: Icons Component — src/js/components/icons.js berisi 100+ SVG icon konsisten (stroke-width 1.8, viewBox 24x24, stroke=currentColor)
+- **Nomor 6d**: Icons Component — src/js/components/icons.js berisi 40+ SVG icon konsisten (stroke-width 1.8, viewBox 24x24, stroke=currentColor)
+- **Nomor 6e**: Toast Component — src/js/components/toast.js dengan `showToast(message, type)` shared utility
+- **Nomor 6f**: Tutorial Component — src/js/components/tutorial.js dengan `tutorialPanel.setContent({...})` per halaman
 - **Nomor 7-10**: CRUD Pages (accounts.js, categories.js, transactions.js, dashboard.js)
 - **Nomor 11-13**: Budget, Goals, Reports pages
 - **Nomor 14**: Settings page
-- **Nomor 15**: Export Service — exportService.exportToExcel(data) dan exportService.exportToPDF() sudah di-implementasikan di src/js/services/export.js, tapi belum terintegrasi ke UI
-- **Nomor 16**: OCR Service — ocrService.extractFromImage(imageFile) sudah di-implementasikan di src/js/services/ocr.js, tapi belum terintegrasi ke UI
+- **Nomor 15**: Export Service — exportService.exportToExcel(data) dan exportService.exportToPDF() sudah di-implementasikan di src/js/services/export.js, sudah terintegrasi di reports.js
+- **Nomor 16**: OCR Service — ocrService.extractFromImage(imageFile) sudah di-implementasikan di src/js/services/ocr.js
 
 ### ✅ Selesai (Tambahan)
 - **CSS Variables**: --canvas, --surface, --surface-alt, --border, --ink, --ink-muted, --emerald, --coral, --amber, --indigo, --violet, --shadow untuk light/dark theme native
 - **Layout**: app.js pakai background:var(--canvas), margin-left:250px untuk sidebar alignment
 - **Components**: sidebar.js, topbar.js pakai CSS variables (bukan Tailwind gray classes)
-- **Dashboard**: 779 baris — Hero, health gauge SVG, Chart.js charts, category breakdown, spending pattern, activity feed, budget status, goals, insights, modal transaksi, toast, global events (search:changed, theme:changed, keydown:Escape)
-- **Animations**: .slide-in, .fade-out, .pulse-once, .card-hover, .btn-press keyframes di index.css
+- **Sidebar**: updateUser(displayName), attachEvents(), setOpen(open), logout() methods
+- **Dashboard**: hero gradient, health gauge SVG, Chart.js charts, category breakdown, spending pattern, activity feed, budget status, goals, insights, modal transaksi, toast, global events (search:changed, theme:changed, keydown:Escape)
+- **Animations**: .slide-in, .fade-out, .card-hover, .btn-press keyframes di index.css
 - **Chart.js**: CDN di index.html, responsive charts dengan CSS variabel colors, empty data handling, period toggle (3/6 bulan)
 - **Global Events**: document.addEventListener untuk search:changed, theme:changed, keydown:Escape
 - **Health Score**: Rumus savingsScore × 0.65 + budgetScore × 0.35, ditampilkan sebagai SVG gauge
 - **Spending Pattern**: Rata-rata pengeluaran harian, hari paling boros/hemat, perbandingan akhir pekan vs hari biasa
 - **Automatic Insights**: Insight tentang budget terpakai, pola akhir pekan, target tercapai
+- **Shared Utils**: src/js/utils.js berisi rupiah(), withAlpha(), categoryIcon(), goalIcon(), accountIcon(), accountTypeLabel()
+- **Shared Toast**: src/js/components/toast.js — showToast(message, 'success'|'error'|'info')
+- **Tutorial Panel**: src/js/components/tutorial.js — setContent({eyebrow, title, description, steps, tip}) per halaman
+- **Tutorial per Halaman**: accounts.js, transactions.js, categories.js sudah punya tutorialPanel.setContent() spesifik
 
 ### 🔲 Belum Dikerjakan (Perlu Integrasi UI)
 
-#### Export/Import
-- **Excel Export** — exportService.exportToExcel(data) sudah ada di src/js/services/export.js tapi belum ada tombol di UI halaman manapun
-- **Excel Import** — Belum di-implementasikan sama sekali
-- **PDF Export** — exportService.exportToPDF() sudah ada tapi belum diintegrasikan ke UI
-- **Cara mengintegrasikan**: Tambahkan tombol di reports.js atau dashboard.js, panggil exportService.exportToExcel(data) dan exportService.exportToPDF() dengan data transaksi
+#### Excel Import
+- **Belum di-implementasikan sama sekali**
+- exportService.exportToExcel(data) sudah ada di src/js/services/export.js dan sudah terintegrasi di reports.js
+- Excel Import (preview & edit sebelum import) masih belum
 
 #### OCR Receipt Scanning
 - **OCR Service** — ocrService.extractFromImage(imageFile) sudah ada di src/js/services/ocr.js (menggunakan tesseract.js + dompurify) tapi belum ada tombol/fitur di UI
 - **Cara mengintegrasikan**: Tambahkan tombol Scan Struk di halaman transaksi, panggil ocrService.extractFromImage(file), parse hasilnya jadi object transaksi, lalu panggil transactionService.create() otomatis
 
 #### Recurring Transactions
-- **Tabel recurring_transactions** sudah ada di database.sql tapi belum ada:
-  - recurringTransactionService di database.js
-  - Halaman/render di sidebar atau menu lain
-  - CRUD interface
-- **Apa yang perlu dibuat**: Service CRUD di database.js, halaman src/js/pages/recurring.js, render di sidebar, dan logika eksekusi berulang
+- **Tabel recurring_transactions** sudah ada di database.sql, recurringTransactionService sudah ada di database.js
+- **src/js/pages/recurring.js** sudah ada (import icon + rupiah dari utils.js) tapi belum punya tutorialPanel.setContent() dan CRUD interface
+- **Apa yang perlu dibuat**: CRUD interface di recurring.js, render di sidebar, dan logika eksekusi berulang
 
 #### Search & Filter Global
 - **Dashboard** sudah punya search lokal di activity feed dan category filter
 - **Belum ada**: Search & filter global yang menyebar ke semua halaman
 - **Apa yang perlu dibuat**: Global search state di app.js, event listener universal, debounce optimization
 
-#### Advanced Reports
-- **reports.js** sudah ada sebagai placeholder tapi belum di-implementasikan secara detail
-- **Belum ada**: Laporan detail (excel/pdf export, filter lanjutan, chart laporan, ringkasan per periode)
+#### Page-specific Tutorials (belum lengkap)
+- **accounts.js** ✅ punya setContent() — cara buat akun
+- **transactions.js** ✅ punya setContent() — cara tambah transaksi, filter, sort, export
+- **categories.js** ✅ punya setContent() — cara buat kategori, edit, hapus
+- **dashboard.js** ❌ belum punya setContent() — akan tampil default "Pilih menu di sidebar"
+- **budgets.js** ❌ belum punya setContent() — akan tampil default
+- **goals.js** ❌ belum punya setContent() — akan tampil default
+- **recurring.js** ❌ belum punya setContent() — akan tampil default
+- **reports.js** ❌ belum punya setContent() — akan tampil default
+- **settings.js** ❌ belum punya setContent() — akan tampil default
 
 ### ✅ Selesai (Sudah Ada di Code tapi Perlu Verifikasi)
 - **Savings Rate Calculation** — Sudah ada di dashboard.js totals().savings = (net / income) × 100
 - **Financial Health Score** — Sudah ada di dashboard.js healthScore(totals), rumus: savingsScore × 0.65 + budgetScore × 0.35
 - **Automatic Insights** — Sudah ada di dashboard.js buildInsights(totals)
 - **Spending Pattern Analysis** — Sudah ada di dashboard.js spendingPattern()
-- **Category Icon Mapping** — Sudah ada di dashboard.js categoryIcon() dan goalIcon()
+- **Category Icon Mapping** — Sudah ada di dashboard.js categoryIcon() dan goalIcon() (di utils.js)
 - **Transaction Modal** — Sudah ada di dashboard.js openModal(), closeModal(), submitTransaction()
+- **Reports Excel/CSV Import** — Sudah terintegrasi di reports.js dengan preview + confirm
+- **Reports Export** — Sudah terintegrasi di reports.js (Excel/PDF)
 
 ### Phase 2 (Setelah MVP Stabil)
 - Excel Import (preview & edit sebelum import)
@@ -210,6 +230,7 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 - Financial Health Score (detail di halaman reports)
 - Automatic Insights (detail di halaman reports)
 - Advanced Reports (lengkap dengan export, filter, chart)
+- Tutorial panel untuk semua halaman
 
 ### Phase 3 (Masa Depan)
 - AI Financial Assistant
@@ -225,6 +246,8 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 - **Responsive** - Desktop, Laptop, Tablet, Mobile
 - **Clean SaaS Dashboard** - Minimal, readable, rapi
 - **Semi-Automatis** - Tidak terhubung bank langsung (versi awal)
+- **Shared Components** - toast.js dan tutorial.js bisa dipakai di semua halaman
+- **Per-Page Tutorial** - Setiap halaman memanggil tutorialPanel.setContent() sendiri di render()-nya; kalau belum di-set, otomatis tampil default "Pilih menu di sidebar"
 
 ## Keamanan
 - Semua data diisolasi per pengguna (RLS)
@@ -265,7 +288,7 @@ updated_at TIMESTAMPTZ
 id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
 name TEXT NOT NULL
-icon TEXT DEFAULT '📁'
+icon TEXT DEFAULT '📁' (kini berisi SVG path string, bukan emoji)
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 ```
@@ -373,39 +396,41 @@ updated_at TIMESTAMPTZ
 ## Lisensi
 Proprietary - Personal Use
 
+## Catatan Teknis
 - Gunakan npm run dev untuk development
 - Gunakan npm run build untuk produksi
 - Selalu gunakan .env untuk credential Supabase (jangan commit ke Git)
 - Semua kode JavaScript menggunakan ES Modules (import/export)
-- src/js/components/ berisi komponen UI yang bisa dipakai ulang (sidebar, topbar, icons.js)
-- src/js/pages/ berisi halaman aplikasi (auth, dashboard, transactions, accounts, categories, budgets, goals, reports, settings)
+- src/js/components/ berisi komponen UI yang bisa dipakai ulang (sidebar, topbar, icons.js, toast.js, tutorial.js)
+- src/js/pages/ berisi halaman aplikasi (auth, dashboard, transactions, accounts, categories, budgets, goals, recurring, reports, settings)
 - src/js/services/ berisi semua panggilan API (supabase, auth, database, export, ocr)
-- src/index.css berisi CSS custom properties (variabel) untuk dark/light theme dan semua kelas layout dashboard
-- src/js/services/export.js — exportToExcel() dan exportToPDF() sudah di-implementasikan tapi belum terintegrasi ke UI
+- src/js/utils.js berisi helper functions shared (rupiah, withAlpha, categoryIcon, goalIcon, accountIcon, accountTypeLabel)
+- src/index.css berisi CSS custom properties untuk dark/light theme dan semua kelas layout dashboard
+- src/js/services/export.js — exportToExcel() dan exportToPDF() sudah di-implementasikan dan terintegrasi di reports.js
 - src/js/services/ocr.js — extractFromImage() sudah di-implementasikan tapi belum terintegrasi ke UI
-- src/js/components/icons.js — library icon SVG, setiap icon punya key dan nilai SVG string
+- src/js/components/icons.js — library icon SVG dengan fungsi icon(name, cls) untuk render SVG
 - localStorage.setItem("theme", "dark"|"light") menyimpan preferensi tema
 - document.documentElement.classList.toggle("dark") mengaktifkan tema gelap
 - CSS custom properties di :root dan html.dark mendukung dark/light theme
 - Semua komponen UI (sidebar, topbar, dashboard) menggunakan CSS variables bukan Tailwind gray classes
-- Dashboard menggunakan hero gradient section, health gauge SVG, Chart.js line/bar charts, spending pattern analysis, insight otomatis, modal tambah transaksi
+- Dashboard menggunakan hero gradient section, health gauge SVG, Chart.js line/bar charts, spending pattern analysis, insight otomatis, modal tambah transaksi, toast notifications
 - ensureProfile() dipanggil otomatis sebelum setiap operasi database untuk memastikan profil pengguna ada
 - profiles.id menggunakan auth.uid() sehingga FK constraint selalu valid
 - Tailwind v4 menggunakan @import "tailwindcss" di CSS, diproses oleh @tailwindcss/postcss di Vite
 - vite.config.js memiliki css: { postcss: "./postcss.config.js" } untuk integrasi PostCSS
-- postcss.config.js berisi import { from } from "@tailwindcss/postcss"
+- postcss.config.js berisi import tailwindcss from '@tailwindcss/postcss'
 - Supabase client menggunakan @supabase/supabase-js npm package, bukan CDN
 - Semua tabel memiliki RLS policies yang hanya mengizinkan akses oleh user yang bersangkutan
 - db.update() dan db.delete() menyertakan eq("user_id", userId) untuk RLS compliance
-- transactionService.create() dan transactionService.addItem() memanggil ensureProfile() sebelum insert
 - Semua data transaksi harus memiliki source field: manual, excel, atau receipt
 - database.sql harus dijalankan di Supabase SQL Editor sebelum aplikasi digunakan
 - crypto.randomUUID() tidak digunakan lagi — profiles.id menggunakan auth.uid()
 - Auto-create profile trigger: on_auth_user_created di auth.users
 - Chart.js dimuat via CDN di index.html, tidak via npm
-- src/js/components/icons.js menggunakan fungsi icon(name, cls) untuk render SVG
-- Dashboard menggunakan IntersectionObserver untuk animate progress bars saat terlihat
-- Global event listeners: search:changed, theme:changed, keydown: Escape
+- categories.js kini menggunakan icon() dari icons.js (SVG path) bukan emoji
+- categories.js, accounts.js, transactions.js sudah punya tutorialPanel.setContent() spesifik per halaman
+- src/js/store/ dan src/js/utils/ adalah direktori kosong yang dicadangkan untuk state management dan utils modular di masa depan
+- transactions.html adalah file HTML standalone yang menggunakan Supabase CDN (bukan npm) untuk editing/transaksi di luar Vite app
 
 ## Git History
 - `5ff2cdc` — feat: persist theme preference to localStorage, add icons.js component
@@ -417,3 +442,7 @@ Proprietary - Personal Use
 - `d2a6b6f` — fix: rewrite transactions.js (was truncated)
 - `701c881` — fix: rename data parameter to recordData to avoid ESBuild conflict
 - `92ccdcc` — feat: Step 5 Database & RLS complete
+- `3970da7` — feat: update icons.js with folder icon and complete SVG set
+- `a8be722` — fix: remove setTimeout override that resets tutorial content
+- `0c251e8` — fix: complete pages with icon(), utils, tutorialPanel
+- `78895b2` — fix: restore transactions.html
