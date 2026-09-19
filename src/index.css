@@ -67,9 +67,30 @@ body{ background:var(--canvas); color:var(--ink); font-family:'Inter',sans-serif
 
 .modal-backdrop{ background:rgba(10,10,16,.55); backdrop-filter:blur(2px); }
 
+.badge{ font-size:.7rem; font-weight:700; padding:.2rem .55rem; border-radius:999px; display:inline-flex; align-items:center; gap:.3rem; white-space:nowrap; }
+
+.sortable{ cursor:pointer; user-select:none; }
+.sortable:hover{ color:var(--ink); }
+
 .cat-row{ display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer; }
 .type-chip{ cursor:pointer; }
 .period-btn{ cursor:pointer; }
+
+/* ---------- toast ---------- */
+.toast-container{ position:fixed; top:80px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+.toast{ padding:12px 20px; border-radius:12px; color:#fff; font-size:14px; font-weight:500; box-shadow:0 4px 12px rgba(0,0,0,.15); pointer-events:auto; display:flex; align-items:center; gap:8px; }
+.toast-success{ background:var(--emerald-strong); }
+.toast-error{ background:var(--coral); }
+.toast-info{ background:var(--indigo); }
+
+/* ---------- panel tutorial (kanan) ---------- */
+#tutorial-panel{ display:flex; flex-direction:column; position:fixed; inset-y:0; right:0; z-index:30; width:300px; background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .2s ease; }
+@media(min-width:1280px){ #tutorial-panel{ transform:translateX(0); } }
+#tutorial-panel.open{ transform:translateX(0); }
+#tutorial-backdrop{ position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.4); display:none; }
+@media(min-width:1280px){ #tutorial-backdrop{ display:none !important; } }
+#tutorial-backdrop.open{ display:block; }
+.step-num{ width:22px; height:22px; border-radius:999px; background:var(--indigo-soft); color:var(--indigo); font-size:.7rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 
 /* ---------- animasi ---------- */
 .pulse-once{ animation: pulseOnce .7s ease; }
