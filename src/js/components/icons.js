@@ -33,6 +33,7 @@ export const ICON_PATHS = {
   bank: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-6 9 6M4 10v9m4-9v9m4-9v9m4-9v9M2 21h20"/>',
   wallet: '<rect x="3" y="6" width="18" height="13" rx="2"/><path stroke-linecap="round" d="M3 10h18"/><circle cx="16" cy="13.5" r="1" fill="currentColor" stroke="none"/>',
   cash: '<rect x="2" y="7" width="20" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path stroke-linecap="round" d="M6 10v.01M18 14v.01"/>',
+  folder: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>',
 
   // ---- transaction types ----
   income: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/>',
