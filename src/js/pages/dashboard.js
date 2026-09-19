@@ -1,6 +1,7 @@
 import { authService } from '../services/auth.js';
 import { accountService } from '../services/database.js';
 import { transactionService } from '../services/database.js';
+import { rupiah, withAlpha, categoryIcon, goalIcon, accountIcon, accountTypeLabel } from '../utils.js';
 import { categoryService } from '../services/database.js';
 import { budgetService } from '../services/database.js';
 import { goalService } from '../services/database.js';
@@ -14,35 +15,6 @@ import { showToast } from '../components/toast.js';
 // atau menabung ke target. Nama method ini ASUMSI mengikuti pola getAll()
 // yang sudah ada di database.js kamu — sesuaikan nama/parameternya kalau
 // beda di implementasi aslimu.
-
-const rupiah = (n) => 'Rp' + Math.round(Number(n) || 0).toLocaleString('id-ID');
-const withAlpha = (hex, alpha) => (hex && hex.startsWith('#')) ? hex + alpha : hex;
-
-function categoryIcon(name = '') {
-  const n = name.toLowerCase();
-  if (n.includes('makan')) return 'food';
-  if (n.includes('tagih')) return 'bills';
-  if (n.includes('transport')) return 'transport';
-  if (n.includes('hibur')) return 'entertainment';
-  if (n.includes('sehat')) return 'health';
-  return 'general';
-}
-function goalIcon(name = '') {
-  const n = name.toLowerCase();
-  if (n.includes('laptop') || n.includes('gadget') || n.includes('hp')) return 'laptop';
-  if (n.includes('darurat') || n.includes('emergency')) return 'shield';
-  return 'goals';
-}
-function accountIcon(type) {
-  if (type === 'bank') return 'bank';
-  if (type === 'e_wallet') return 'wallet';
-  if (type === 'cash') return 'cash';
-  return 'wallet';
-}
-function accountTypeLabel(type) {
-  return type === 'bank' ? 'Bank' : type === 'e_wallet' ? 'E-Wallet' : type === 'cash' ? 'Tunai' : 'Lainnya';
-}
-
 export const dashboardPage = {
   data: { accounts: [], transactions: [], categories: [], budgets: [], goals: [] },
   ui: { activeType: 'all', activeCategory: null, search: '', txType: 'expense' },
@@ -647,8 +619,6 @@ export const dashboardPage = {
     }, { threshold: .2 });
     document.querySelectorAll('.bar-fill').forEach(el => this._barObserver.observe(el));
   },
-
-
   // ---------- events ----------
   attachEvents() {
     document.getElementById('reset-cat-filter').addEventListener('click', () => {

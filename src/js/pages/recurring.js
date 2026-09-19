@@ -1,4 +1,5 @@
 import { recurringTransactionService } from '../services/database.js';
+import { rupiah } from '../utils.js';
 import { icon } from '../components/icons.js';
 import { authService } from '../services/auth.js';
 
@@ -178,4 +179,3 @@ export const recurringPage = {
   }
 };
 
-const rupiah = (n) => 'Rp' + Math.round(Number(n) || 0).toLocaleString('id-ID');
