@@ -58,5 +58,38 @@ export const sidebar = {
 
       <div id="sidebar-backdrop" class="fixed inset-0 z-20 hidden lg:hidden" style="background:rgba(0,0,0,.4);"></div>
     `;
+    this.attachEvents();
+  },
+
+  attachEvents() {
+    const logoutBtn = document.getElementById('btn-logout');
+    const closeBtn = document.getElementById('btn-sidebar-close');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => this.logout());
+    if (closeBtn) closeBtn.addEventListener('click', () => this.setOpen(false));
+    if (backdrop) backdrop.addEventListener('click', () => this.setOpen(false));
+    document.querySelectorAll('#sidebar [data-route]').forEach(a => {
+      a.addEventListener('click', () => this.setOpen(false));
+    });
+    document.addEventListener('sidebar:toggle', (e) => this.setOpen(e.detail?.open));
+  },
+
+  setOpen(open) {
+    const sidebarEl = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (!sidebarEl || !backdrop) return;
+    sidebarEl.classList.toggle('-translate-x-full', !open);
+    sidebarEl.classList.toggle('flex', !!open);
+    backdrop.classList.toggle('hidden', !open);
+  },
+
+  async logout() {
+    await authService.logout();
+    window.location.href = '/';
+  },
+
+  updateUser(name) {
+    const el = document.getElementById('sidebar-user-name');
+    if (el) el.textContent = name;
   }
 };
