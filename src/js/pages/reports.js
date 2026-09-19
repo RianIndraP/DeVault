@@ -1,6 +1,7 @@
 import { transactionService } from '../services/database.js';
 import { exportService } from '../services/export.js';
 import { icon } from '../components/icons.js';
+import { showToast } from '../components/toast.js';
 
 export const reportsPage = {
   _listenersBound: false,
@@ -217,7 +218,7 @@ export const reportsPage = {
         const cols = row.split(',');
         return { date: cols[0]?.trim(), description: cols[1]?.trim(), category: cols[2]?.trim(), amount: cols[3]?.trim(), type: cols[4]?.trim() };
       }).filter(r => r.date && r.description && r.amount);
-      if (!preview.length) { this.toast('Tidak ada data CSV valid.', 'coral'); return; }
+      if (!preview.length) { showToast('Tidak ada data CSV valid.', 'error'); return; }
       this._importPreview = preview;
       const details = document.getElementById('report-details');
       if (details) details.innerHTML = `
@@ -245,7 +246,7 @@ export const reportsPage = {
           amount: r.amount || r.jumlah || 0,
           type: r.type || r.tipe || 'expense'
         })).filter(r => r.date && r.description && r.amount);
-        if (!preview.length) { this.toast('Tidak ada data Excel valid.', 'coral'); return; }
+        if (!preview.length) { showToast('Tidak ada data Excel valid.', 'error'); return; }
         this._importPreview = preview;
         const details = document.getElementById('report-details');
         if (details) details.innerHTML = `
@@ -260,9 +261,9 @@ export const reportsPage = {
         const confirmBtn = document.getElementById('btn-confirm-import');
         if (confirmBtn) confirmBtn.addEventListener('click', () => this.confirmImport(preview));
         showToast(`Preview ${preview.length} baris dari Excel`, 'info');
-      } catch (err) { this.toast('Gagal parse Excel.', 'coral'); }
+      } catch (err) { showToast('Gagal parse Excel.', 'error'); }
     } else {
-      this.toast('Format tidak didukung. Gunakan .csv atau .xlsx', 'coral');
+      showToast('Format tidak didukung. Gunakan .csv atau .xlsx', 'error');
     }
   },
 
@@ -289,32 +290,22 @@ export const reportsPage = {
     const month = document.getElementById('report-month').value;
     const year = document.getElementById('report-year').value;
     const { data: transactions } = await transactionService.getByMonth(parseInt(month), parseInt(year));
-    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    if (!transactions || !transactions.length) { showToast('Tidak ada data untuk diekspor.', 'error'); return; }
     try {
       await exportService.exportToExcel(transactions.map(t => ({ date:t.date, description:t.description, type:t.type, amount:Number(t.amount), category_id:t.category_id })));
-      this.toast('Excel berhasil diekspor!', 'emerald');
-    } catch (e) { this.toast('Gagal export Excel.', 'coral'); }
+      showToast('Excel berhasil diekspor!', 'success');
+    } catch (e) { showToast('Gagal export Excel.', 'error'); }
   },
 
   async exportPDF() {
     const month = document.getElementById('report-month').value;
     const year = document.getElementById('report-year').value;
     const { data: transactions } = await transactionService.getByMonth(parseInt(month), parseInt(year));
-    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    if (!transactions || !transactions.length) { showToast('Tidak ada data untuk diekspor.', 'error'); return; }
     try {
       await exportService.exportToPDF();
-      this.toast('PDF berhasil diekspor!', 'emerald');
-    } catch (e) { this.toast('Gagal export PDF.', 'coral'); }
+      showToast('PDF berhasil diekspor!', 'success');
+    } catch (e) { showToast('Gagal export PDF.', 'error'); }
   },
 
-  toast(msg, tone = 'indigo') {
-    const stack = document.getElementById('toast-stack') || document.body;
-    const el = document.createElement('div');
-    el.className = 'slide-in rounded-lg px-4 py-3 text-sm font-medium card';
-    el.style.borderLeft = `4px solid var(--${tone})`;
-    el.style.color = 'var(--ink)';
-    el.textContent = msg;
-    stack.appendChild(el);
-    setTimeout(() => { el.classList.add('fade-out'); setTimeout(() => el.remove(), 320); }, 2600);
-  }
 };

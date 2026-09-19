@@ -7,6 +7,7 @@ import { goalService } from '../services/database.js';
 import { exportService } from '../services/export.js';
 import { ocrService } from '../services/ocr.js';
 import { icon } from '../components/icons.js';
+import { showToast } from '../components/toast.js';
 
 // ⚠️ CATATAN: dashboard ini memanggil transactionService.create(),
 // accountService.update() dan goalService.update() saat menambah transaksi
@@ -555,7 +556,7 @@ export const dashboardPage = {
   async contributeToGoal(goalId) {
     const input = document.querySelector(`[data-goalinput="${goalId}"]`);
     const amount = Number(input.value);
-    if (!amount || amount <= 0) { this.toast('Masukkan jumlah yang valid.', 'coral'); return; }
+    if (!amount || amount <= 0) { showToast('Masukkan jumlah yang valid.', 'error'); return; }
     const goal = this.data.goals.find(g => g.id === goalId);
     const newAmount = Math.min(Number(goal.target_amount), Number(goal.current_amount || 0) + amount);
     try {
@@ -563,10 +564,10 @@ export const dashboardPage = {
       const reached = newAmount >= Number(goal.target_amount);
       await this.loadData();
       this.renderAll();
-      this.toast(reached ? `🎉 Target "${goal.name}" tercapai!` : `${rupiah(amount)} ditambahkan ke "${goal.name}".`, reached ? 'emerald' : 'indigo');
+      showToast(reached ? `🎉 Target "${goal.name}" tercapai!` : `${rupiah(amount)} ditambahkan ke "${goal.name}".`, reached ? 'success' : 'info');
     } catch (err) {
       console.error(err);
-      this.toast('Gagal menyimpan tabungan. Cek koneksi/izin akun.', 'coral');
+      showToast('Gagal menyimpan tabungan. Cek koneksi/izin akun.', 'error');
     }
   },
 
@@ -647,17 +648,6 @@ export const dashboardPage = {
     document.querySelectorAll('.bar-fill').forEach(el => this._barObserver.observe(el));
   },
 
-  toast(msg, tone = 'indigo') {
-    const stack = document.getElementById('toast-stack');
-    if (!stack) return;
-    const el = document.createElement('div');
-    el.className = 'slide-in rounded-lg px-4 py-3 text-sm font-medium card';
-    el.style.borderLeft = `4px solid var(--${tone})`;
-    el.style.color = 'var(--ink)';
-    el.textContent = msg;
-    stack.appendChild(el);
-    setTimeout(() => { el.classList.add('fade-out'); setTimeout(() => el.remove(), 320); }, 2600);
-  },
 
   // ---------- events ----------
   attachEvents() {
@@ -764,7 +754,7 @@ export const dashboardPage = {
   },
 
   openModal() {
-    if (!this.data.accounts.length) { this.toast('Buat akun dulu sebelum menambah transaksi.', 'coral'); return; }
+    if (!this.data.accounts.length) { showToast('Buat akun dulu sebelum menambah transaksi.', 'error'); return; }
     this.fillSelects();
     this.setTxType('expense');
     document.getElementById('tx-amount').value = '';
@@ -787,13 +777,13 @@ export const dashboardPage = {
     const description = document.getElementById('tx-desc').value.trim();
     const type = this.ui.txType;
     const accountId = document.getElementById('tx-account').value;
-    if (!amount || amount <= 0 || !description || !accountId) { this.toast('Lengkapi jumlah, deskripsi, dan akun.', 'coral'); return; }
+    if (!amount || amount <= 0 || !description || !accountId) { showToast('Lengkapi jumlah, deskripsi, dan akun.', 'error'); return; }
 
     const payload = { type, amount, description, date: new Date().toISOString(), account_id: accountId };
     if (type === 'expense') payload.category_id = document.getElementById('tx-category').value;
     if (type === 'transfer') {
       payload.to_account_id = document.getElementById('tx-account-to').value;
-      if (payload.to_account_id === accountId) { this.toast('Akun tujuan harus berbeda.', 'coral'); return; }
+      if (payload.to_account_id === accountId) { showToast('Akun tujuan harus berbeda.', 'error'); return; }
     }
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -804,10 +794,10 @@ export const dashboardPage = {
       await this.loadData();
       this.renderAll();
       this.closeModal();
-      this.toast('Transaksi ditambahkan.', 'emerald');
+      showToast('Transaksi ditambahkan.', 'success');
     } catch (err) {
       console.error(err);
-      this.toast('Gagal menyimpan transaksi. Cek koneksi atau coba lagi.', 'coral');
+      showToast('Gagal menyimpan transaksi. Cek koneksi atau coba lagi.', 'error');
     } finally {
       submitBtn.disabled = false;
     }
@@ -817,22 +807,22 @@ export const dashboardPage = {
     const month = new Date().getMonth() + 1;
     const year = new Date().getFullYear();
     const { data: transactions } = await transactionService.getByMonth(month, year);
-    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    if (!transactions || !transactions.length) { showToast('Tidak ada data untuk diekspor.', 'error'); return; }
     try {
       await exportService.exportToExcel(transactions.map(t => ({ date: t.date, description: t.description, type: t.type, amount: Number(t.amount), category_id: t.category_id })));
-      this.toast('Excel berhasil diekspor!', 'emerald');
-    } catch (e) { this.toast('Gagal export Excel.', 'coral'); }
+      showToast('Excel berhasil diekspor!', 'success');
+    } catch (e) { showToast('Gagal export Excel.', 'error'); }
   },
 
   async exportPDF() {
     const month = new Date().getMonth() + 1;
     const year = new Date().getFullYear();
     const { data: transactions } = await transactionService.getByMonth(month, year);
-    if (!transactions || !transactions.length) { this.toast('Tidak ada data untuk diekspor.', 'coral'); return; }
+    if (!transactions || !transactions.length) { showToast('Tidak ada data untuk diekspor.', 'error'); return; }
     try {
       await exportService.exportToPDF();
-      this.toast('PDF berhasil diekspor!', 'emerald');
-    } catch (e) { this.toast('Gagal export PDF.', 'coral'); }
+      showToast('PDF berhasil diekspor!', 'success');
+    } catch (e) { showToast('Gagal export PDF.', 'error'); }
   },
 
   async scanReceipt() {
@@ -843,12 +833,12 @@ export const dashboardPage = {
   async handleOCRFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    this.toast('Sedang memindai struk...', 'indigo');
+    showToast('Sedang memindai struk...', 'info');
     try {
       const result = await ocrService.extractFromImage(file);
       if (result.items.length > 0) {
         const total = result.items.reduce((s, item) => s + (item.amount || 0), 0);
-        this.toast(`Struk terdeteksi: ${result.items.length} item, total Rp${Math.round(total).toLocaleString('id-ID')}`, 'emerald');
+        showToast(`Struk terdeteksi: ${result.items.length} item, total Rp${Math.round(total).toLocaleString('id-ID')}`, 'success');
         const desc = result.items.map(i => i.description).join(', ').substring(0, 100);
         this.openModal();
         setTimeout(() => {
@@ -858,11 +848,11 @@ export const dashboardPage = {
           if (descInput) descInput.value = desc;
         }, 500);
       } else {
-        this.toast('Tidak ada angka yang terdeteksi dari struk.', 'amber');
+        showToast('Tidak ada angka yang terdeteksi dari struk.', 'amber');
       }
     } catch (err) {
       console.error(err);
-      this.toast('Gagal scan struk. Coba lagi.', 'coral');
+      showToast('Gagal scan struk. Coba lagi.', 'error');
     }
     e.target.value = '';
   }
