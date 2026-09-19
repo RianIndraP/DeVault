@@ -1,7 +1,7 @@
 import { transactionService, accountService, categoryService } from '../services/database.js';
-import { icon } from './components/icons.js';
-import { showToast } from './components/toast.js';
-import { tutorialPanel } from './components/tutorial.js';
+import { icon } from '../components/icons.js';
+import { showToast } from '../components/toast.js';
+import { tutorialPanel } from '../components/tutorial.js';
 import { rupiah, withAlpha, categoryIcon, accountTypeLabel } from '../utils.js';
 
 export const transactionsPage = {
