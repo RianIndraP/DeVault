@@ -431,7 +431,6 @@ Proprietary - Personal Use
 - categories.js kini menggunakan icon() dari icons.js (SVG path) bukan emoji
 - categories.js, accounts.js, transactions.js sudah punya tutorialPanel.setContent() spesifik per halaman
 - src/js/store/ dan src/js/utils/ adalah direktori kosong yang dicadangkan untuk state management dan utils modular di masa depan
-- transactions.html adalah file HTML standalone yang menggunakan Supabase CDN (bukan npm) untuk editing/transaksi di luar Vite app
 - login.html adalah file HTML standalone untuk halaman login/register, menggunakan Tailwind CDN dan CSS inline
 - target.html adalah file HTML standalone untuk halaman target tabungan, menggunakan Tailwind CDN, sidebar, dan icon inline
 - src/js/app.js — route /recurring terdaftar, import recurringPage sudah ditambahkan
@@ -458,4 +457,3 @@ Proprietary - Personal Use
 - `3970da7` — feat: update icons.js with folder icon and complete SVG set
 - `a8be722` — fix: remove setTimeout override that resets tutorial content
 - `0c251e8` — fix: complete pages with icon(), utils, tutorialPanel
-- `78895b2` — fix: restore transactions.html
