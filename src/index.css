@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* ---------- App layout scale ---------- */
+.app-layout {
+  transform: scale(0.8);
+  transform-origin: top left;
+}
+
 /* =========================================================
    Design tokens Dompetku — sumber: mockup HTML (versi indigo)
    ========================================================= */
