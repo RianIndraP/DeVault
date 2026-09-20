@@ -21,8 +21,8 @@ export const app = {
     console.log('[Finance Dashboard] Initializing...');
     this.currentUser = await authService.getCurrentUser();
     this.setupRouter();
-    this.setupAuthListener();
     await this.renderLayout();
+    this.setupAuthListener();
   },
 
   setupRouter() {
@@ -64,6 +64,7 @@ export const app = {
     await topbar.render();
     await tutorialPanel.render();
     router.resolve();
+    this._layoutRendered = true;
   },
 
   setupAuthListener() {
@@ -73,11 +74,11 @@ export const app = {
         const displayName = this.currentUser?.user_metadata?.display_name || this.currentUser?.email?.split('@')[0] || 'User';
         sidebar.updateUser(displayName);
         topbar.updateUser(displayName);
-        if (window.location.pathname === '/login' || window.location.pathname === '/register') {
+        if (this._layoutRendered && (window.location.pathname === '/login' || window.location.pathname === '/register')) {
           router.navigate('/');
         }
       } else {
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        if (this._layoutRendered && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
           router.navigate('/login');
         }
       }
