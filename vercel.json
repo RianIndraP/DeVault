@@ -1,7 +1,7 @@
 {
-  "buildCommand": "npx vite build",
+  "buildCommand": "chmod +x node_modules/.bin/vite && npx vite build",
   "devCommand": "npx vite",
-  "installCommand": "npm install --ignore-scripts",
+  "installCommand": "npm install --force",
   "framework": "vite",
   "regions": ["iad1"]
 }
