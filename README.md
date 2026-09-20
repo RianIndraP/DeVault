@@ -34,6 +34,8 @@ Aplikasi web manajemen keuangan pribadi berbasis JavaScript + Supabase. Membantu
 ```
 personal-finance-dashboard/
 ├── index.html              ← File utama HTML (entry point + Chart.js CDN)
+├── login.html              ← Standalone HTML (standalone login/register page, untuk preview/editing)
+├── target.html             ← Standalone HTML (standalone target page, untuk preview/editing)
 ├── transactions.html       ← Standalone HTML (standalone transactions page, Supabase CDN)
 ├── package.json            ← Dependency & script commands
 ├── vite.config.js          ← Konfigurasi Vite (PostCSS + Tailwind v4)
@@ -53,7 +55,7 @@ personal-finance-dashboard/
         ├── components/     ← Komponen UI yang bisa dipakai ulang
         │   ├── sidebar.js      ← Sidebar navigasi (updateUser, attachEvents, setOpen, logout)
         │   ├── topbar.js       ← Topbar header (theme toggle, user info)
-        │   ├── icons.js        ← Library icon SVG (40+ icons, stroke-width 1.8, viewBox 24x24)
+        │   ├── icons.js        ← Library icon SVG (42+ icons, stroke-width 1.8, viewBox 24x24)
         │   ├── toast.js        ← Shared toast notification component (showToast)
         │   └── tutorial.js     ← Tutorial panel component (setContent, render, setOpen)
         ├── pages/          ← Halaman aplikasi
@@ -153,7 +155,7 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 - **Nomor 6**: Layout Dashboard (Sidebar navigasi, Topbar header, Responsive, CSS Variables untuk dark/light theme)
 - **Nomor 6b**: Dashboard Design — Hero gradient section, SVG health gauge, Chart.js line/bar charts, category breakdown, spending pattern analysis, activity feed dengan search/filter, budget status, goals dengan nabung button, insight otomatis, modal tambah transaksi, toast notifications, IntersectionObserver animate bars
 - **Nomor 6c**: Theme Persistence — Dark/light theme disimpan ke localStorage, auto-applied saat load
-- **Nomor 6d**: Icons Component — src/js/components/icons.js berisi 40+ SVG icon konsisten (stroke-width 1.8, viewBox 24x24, stroke=currentColor)
+- **Nomor 6d**: Icons Component — src/js/components/icons.js berisi 42+ SVG icon konsisten (stroke-width 1.8, viewBox 24x24, stroke=currentColor)
 - **Nomor 6e**: Toast Component — src/js/components/toast.js dengan `showToast(message, type)` shared utility
 - **Nomor 6f**: Tutorial Component — src/js/components/tutorial.js dengan `tutorialPanel.setContent({...})` per halaman
 - **Nomor 7-10**: CRUD Pages (accounts.js, categories.js, transactions.js, dashboard.js)
@@ -204,10 +206,10 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 - **accounts.js** ✅ punya setContent() — cara buat akun
 - **transactions.js** ✅ punya setContent() — cara tambah transaksi, filter, sort, export
 - **categories.js** ✅ punya setContent() — cara buat kategori, edit, hapus
-- **dashboard.js** ❌ belum punya setContent() — akan tampil default "Pilih menu di sidebar"
+- **dashboard.js** ❌ belum punya setContent() — akan tampil default "Pilih menu di sidebar" (tambah health info modal)
 - **budgets.js** ❌ belum punya setContent() — akan tampil default
 - **goals.js** ❌ belum punya setContent() — akan tampil default
-- **recurring.js** ❌ belum punya setContent() — akan tampil default
+- **recurring.js** ❌ belum punya setContent() — akan tampil default (route /recurring sudah terdaftar)
 - **reports.js** ❌ belum punya setContent() — akan tampil default
 - **settings.js** ❌ belum punya setContent() — akan tampil default
 
@@ -431,6 +433,18 @@ Proprietary - Personal Use
 - categories.js, accounts.js, transactions.js sudah punya tutorialPanel.setContent() spesifik per halaman
 - src/js/store/ dan src/js/utils/ adalah direktori kosong yang dicadangkan untuk state management dan utils modular di masa depan
 - transactions.html adalah file HTML standalone yang menggunakan Supabase CDN (bukan npm) untuk editing/transaksi di luar Vite app
+- login.html adalah file HTML standalone untuk halaman login/register, menggunakan Tailwind CDN dan CSS inline
+- target.html adalah file HTML standalone untuk halaman target tabungan, menggunakan Tailwind CDN, sidebar, dan icon inline
+- src/js/app.js — route /recurring terdaftar, import recurringPage sudah ditambahkan
+- src/js/pages/budgets.js — current_amount dihitung dari transaksi (import transactionService), isThisMonth() method ditambahkan
+- src/js/pages/dashboard.js — health-info-modal, warna net dinamis (emerald/coral), renderBudgets handle null category_id
+- src/js/pages/transactions.js — month/year ditambahkan ke payload Supabase, account_to_id hanya dikirim saat transfer
+- src/js/components/icons.js — tambah icon file (PDF export) dan camera (OCR receipt scan)
+
+## Perubahan Terakhir
+- **7118796** — fix: budget NaN%, recurring /recurring route, icon file/camera, net color fix, health info modal, transactions month/year payload
+- **login.html** & **target.html** — standalone HTML files dibuat untuk preview editing
+- **icons.js** — tambah icon file (PDF export) dan camera (OCR receipt scan)
 
 ## Git History
 - `5ff2cdc` — feat: persist theme preference to localStorage, add icons.js component
