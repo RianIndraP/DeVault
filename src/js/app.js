@@ -54,7 +54,7 @@ export const app = {
       return;
     }
     appEl.innerHTML = `
-      <div class="flex min-h-screen app-layout" style="background:var(--canvas)">
+      <div class="flex min-h-screen" style="background:var(--canvas)">
         <div id="sidebar-container"></div>
         <div class="flex-1 min-w-0 lg:ml-64 xl:mr-[300px]">
           <div id="topbar-container"></div>
