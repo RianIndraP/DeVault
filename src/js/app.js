@@ -21,9 +21,8 @@ export const app = {
     console.log('[Finance Dashboard] Initializing...');
     this.currentUser = await authService.getCurrentUser();
     this.setupRouter();
-    this.renderLayout();
     this.setupAuthListener();
-    await this.checkAuth();
+    this.renderLayout();
   },
 
   setupRouter() {
@@ -48,7 +47,7 @@ export const app = {
     if (!appEl) return;
     if (!this.currentUser) {
       appEl.innerHTML = '<div id="page-container" style="background:var(--canvas); min-height:100vh;"></div>';
-      router.resolve();
+      router.navigate('/login');
       return;
     }
     appEl.innerHTML = `
