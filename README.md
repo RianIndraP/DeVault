@@ -34,20 +34,17 @@ Aplikasi web manajemen keuangan pribadi berbasis JavaScript + Supabase. Membantu
 ```
 personal-finance-dashboard/
 ├── index.html              ← File utama HTML (entry point + Chart.js CDN)
-├── login.html              ← Standalone HTML (standalone login/register page, untuk preview/editing)
-├── target.html             ← Standalone HTML (standalone target page, untuk preview/editing)
 ├── package.json            ← Dependency & script commands
+├── package-lock.json       ← Lock file dependency
 ├── vite.config.js          ← Konfigurasi Vite (PostCSS + Tailwind v4)
 ├── postcss.config.js       ← PostCSS config (@tailwindcss/postcss)
-├── .env                    ← Environment variables (Supabase credentials)
-├── .env.example            ← Template variabel environment
-├── .gitignore              ← File yang tidak di-commit ke Git
+├── vercel.json             ← Vercel deployment config
 ├── database.sql            ← Schema SQL Supabase (9 tabel + RLS + triggers)
 ├── public/                 ← File statis (favicon)
 ├── dist/                   ← Build output
 └── src/
     ├── main.js             ← Titik masuk JavaScript
-    ├── index.css           ← Styles (CSS variables + layout classes + Tailwind)
+    ├── index.css           ← Styles (CSS variables + Tailwind)
     └── js/
         ├── app.js          ← Inisialisasi aplikasi utama (routing, layout)
         ├── router.js       ← Client-side router
@@ -59,21 +56,21 @@ personal-finance-dashboard/
         │   └── tutorial.js     ← Tutorial panel component (setContent, render, setOpen)
         ├── pages/          ← Halaman aplikasi
         │   ├── auth.js         ← Register, Login, Logout
-        │   ├── dashboard.js    ← Dashboard: hero, gauge, Chart.js, insights, modal, toast
-        │   ├── transactions.js ← CRUD transaksi: stat cards, filters, sort, modal, export, tutorial
-        │   ├── accounts.js     ← CRUD akun: stat cards, chips, search, modal, tutorial
-        │   ├── categories.js   ← CRUD kategori: grid, search, sort, icons, tutorial
-        │   ├── budgets.js      ← Budget per kategori (minimal, placeholder)
-        │   ├── goals.js        ← Target tabungan (minimal, placeholder)
-        │   ├── recurring.js    ← Transaksi berulang (icon + rupiah from utils)
-        │   ├── reports.js      ← Laporan bulanan: Chart.js, Excel/CSV import, export, preview
-        │   └── settings.js     ← Pengaturan (minimal, placeholder)
+        │   ├── dashboard.js    ← Dashboard: hero, gauge, Chart.js, insights, health modal
+        │   ├── transactions.js ← CRUD transaksi: stat cards, filters, sort, modal, export
+        │   ├── accounts.js     ← CRUD akun: stat cards, chips, search, modal
+        │   ├── categories.js   ← CRUD kategori: grid, search, sort, icons
+        │   ├── budgets.js      ← Budget per kategori (current_amount dari transaksi)
+        │   ├── goals.js        ← Target tabungan
+        │   ├── recurring.js    ← Transaksi berulang (CRUD + execute)
+        │   ├── reports.js      ← Laporan bulanan: Chart.js, Excel/CSV, export, preview
+        │   └── settings.js     ← Pengaturan
         ├── services/       ← Layanan API & integrasi
         │   ├── supabase.js   ← Client Supabase (createClient)
         │   ├── auth.js       ← Layanan autentikasi (onAuthStateChange)
-        │   ├── database.js   ← CRUD service semua tabel (accounts, categories, transactions, budgets, goals, recurring)
-        │   ├── export.js     ← Excel/PDF export service (exportToExcel, exportToPDF)
-        │   └── ocr.js        ← OCR receipt scanning service (extractFromImage)
+        │   ├── database.js   ← CRUD service semua tabel
+        │   ├── export.js     ← Excel/PDF export service
+        │   └── ocr.js        ← OCR receipt scanning service
         ├── utils.js         ← Shared helper functions (rupiah, withAlpha, categoryIcon, goalIcon, accountIcon, accountTypeLabel)
         └── store/           ← Empty directory (reserved for state management)
 ```
