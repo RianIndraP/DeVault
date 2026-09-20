@@ -3,5 +3,8 @@
   "devCommand": "npx vite",
   "installCommand": "npm install --force",
   "framework": "vite",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
