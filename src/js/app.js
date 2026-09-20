@@ -22,7 +22,7 @@ export const app = {
     this.currentUser = await authService.getCurrentUser();
     this.setupRouter();
     this.setupAuthListener();
-    this.renderLayout();
+    await this.renderLayout();
   },
 
   setupRouter() {
@@ -42,7 +42,7 @@ export const app = {
     router.init(routes);
   },
 
-  renderLayout() {
+  async renderLayout() {
     const appEl = document.getElementById('app');
     if (!appEl) return;
     if (!this.currentUser) {
@@ -60,9 +60,9 @@ export const app = {
         <div id="tutorial-container"></div>
       </div>
     `;
-    sidebar.render();
-    topbar.render();
-    tutorialPanel.render();
+    await sidebar.render();
+    await topbar.render();
+    await tutorialPanel.render();
     router.resolve();
   },
 
