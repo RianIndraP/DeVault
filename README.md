@@ -36,7 +36,6 @@ personal-finance-dashboard/
 ├── index.html              ← File utama HTML (entry point + Chart.js CDN)
 ├── login.html              ← Standalone HTML (standalone login/register page, untuk preview/editing)
 ├── target.html             ← Standalone HTML (standalone target page, untuk preview/editing)
-├── transactions.html       ← Standalone HTML (standalone transactions page, Supabase CDN)
 ├── package.json            ← Dependency & script commands
 ├── vite.config.js          ← Konfigurasi Vite (PostCSS + Tailwind v4)
 ├── postcss.config.js       ← PostCSS config (@tailwindcss/postcss)
