@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npx vite build",
+  "devCommand": "npx vite",
+  "installCommand": "npm install --ignore-scripts",
+  "framework": "vite",
+  "regions": ["iad1"]
+}
