@@ -138,86 +138,119 @@ ALTER TABLE recurring_transactions ENABLE ROW LEVEL SECURITY;
 -- ============================================
 
 -- POLICIES FOR profiles
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile" ON profiles
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
     FOR UPDATE USING (auth.uid() = user_id);
 
 -- POLICIES FOR accounts
+DROP POLICY IF EXISTS "Users can view own accounts" ON accounts;
 CREATE POLICY "Users can view own accounts" ON accounts
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own accounts" ON accounts;
 CREATE POLICY "Users can insert own accounts" ON accounts
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own accounts" ON accounts;
 CREATE POLICY "Users can update own accounts" ON accounts
     FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own accounts" ON accounts;
 CREATE POLICY "Users can delete own accounts" ON accounts
     FOR DELETE USING (auth.uid() = user_id);
 
 -- POLICIES FOR categories
+DROP POLICY IF EXISTS "Users can view own categories" ON categories;
 CREATE POLICY "Users can view own categories" ON categories
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own categories" ON categories;
 CREATE POLICY "Users can insert own categories" ON categories
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own categories" ON categories;
 CREATE POLICY "Users can update own categories" ON categories
     FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own categories" ON categories;
 CREATE POLICY "Users can delete own categories" ON categories
     FOR DELETE USING (auth.uid() = user_id);
 
 -- POLICIES FOR transactions
+DROP POLICY IF EXISTS "Users can view own transactions" ON transactions;
 CREATE POLICY "Users can view own transactions" ON transactions
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own transactions" ON transactions;
 CREATE POLICY "Users can insert own transactions" ON transactions
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own transactions" ON transactions;
 CREATE POLICY "Users can update own transactions" ON transactions
     FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own transactions" ON transactions;
 CREATE POLICY "Users can delete own transactions" ON transactions
     FOR DELETE USING (auth.uid() = user_id);
 
 -- POLICIES FOR transaction_items
+DROP POLICY IF EXISTS "Users can view own transaction items" ON transaction_items;
 CREATE POLICY "Users can view own transaction items" ON transaction_items
     FOR SELECT USING (auth.uid() = (SELECT user_id FROM transactions WHERE id = transaction_id));
+DROP POLICY IF EXISTS "Users can insert own transaction items" ON transaction_items;
 CREATE POLICY "Users can insert own transaction items" ON transaction_items
     FOR INSERT WITH CHECK (auth.uid() = (SELECT user_id FROM transactions WHERE id = transaction_id));
+DROP POLICY IF EXISTS "Users can delete own transaction items" ON transaction_items;
 CREATE POLICY "Users can delete own transaction items" ON transaction_items
     FOR DELETE USING (auth.uid() = (SELECT user_id FROM transactions WHERE id = transaction_id));
 
 -- POLICIES FOR transfers
+DROP POLICY IF EXISTS "Users can view own transfers" ON transfers;
 CREATE POLICY "Users can view own transfers" ON transfers
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own transfers" ON transfers;
 CREATE POLICY "Users can insert own transfers" ON transfers
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own transfers" ON transfers;
 CREATE POLICY "Users can delete own transfers" ON transfers
     FOR DELETE USING (auth.uid() = user_id);
 
 -- POLICIES FOR budgets
+DROP POLICY IF EXISTS "Users can view own budgets" ON budgets;
 CREATE POLICY "Users can view own budgets" ON budgets
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own budgets" ON budgets;
 CREATE POLICY "Users can insert own budgets" ON budgets
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own budgets" ON budgets;
 CREATE POLICY "Users can update own budgets" ON budgets
     FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own budgets" ON budgets;
 CREATE POLICY "Users can delete own budgets" ON budgets
     FOR DELETE USING (auth.uid() = user_id);
 
 -- POLICIES FOR goals
+DROP POLICY IF EXISTS "Users can view own goals" ON goals;
 CREATE POLICY "Users can view own goals" ON goals
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own goals" ON goals;
 CREATE POLICY "Users can insert own goals" ON goals
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own goals" ON goals;
 CREATE POLICY "Users can update own goals" ON goals
     FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own goals" ON goals;
 CREATE POLICY "Users can delete own goals" ON goals
     FOR DELETE USING (auth.uid() = user_id);
 
 -- POLICIES FOR recurring_transactions
+DROP POLICY IF EXISTS "Users can view own recurring transactions" ON recurring_transactions;
 CREATE POLICY "Users can view own recurring transactions" ON recurring_transactions
     FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own recurring transactions" ON recurring_transactions;
 CREATE POLICY "Users can insert own recurring transactions" ON recurring_transactions
     FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own recurring transactions" ON recurring_transactions;
 CREATE POLICY "Users can update own recurring transactions" ON recurring_transactions
     FOR UPDATE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own recurring transactions" ON recurring_transactions;
 CREATE POLICY "Users can delete own recurring transactions" ON recurring_transactions
     FOR DELETE USING (auth.uid() = user_id);
 
