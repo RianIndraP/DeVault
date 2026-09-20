@@ -324,6 +324,7 @@ export const dashboardPage = {
   },
 
   healthScore(totals) {
+    if (!this.data.accounts.length && !this.data.transactions.length && !this.data.budgets.length) return 0;
     const budgetPcts = this.data.budgets.map(b => {
       const spent = this.data.transactions.filter(t => t.type === 'expense' && t.category_id === b.category_id && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
       return Number(b.amount) > 0 ? (spent / Number(b.amount)) * 100 : 0;
