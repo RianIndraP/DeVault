@@ -11,6 +11,7 @@ import { categoriesPage } from './pages/categories.js';
 import { budgetsPage } from './pages/budgets.js';
 import { goalsPage } from './pages/goals.js';
 import { reportsPage } from './pages/reports.js';
+import { recurringPage } from './pages/recurring.js';
 import { settingsPage } from './pages/settings.js';
 
 export const app = {
@@ -21,8 +22,9 @@ export const app = {
     console.log('[Finance Dashboard] Initializing...');
     this.currentUser = await authService.getCurrentUser();
     this.setupRouter();
+    this.renderLayout();
     this.setupAuthListener();
-    await this.renderLayout();
+    await this.checkAuth();
   },
 
   setupRouter() {
@@ -35,6 +37,7 @@ export const app = {
       '/budgets': budgetsPage,
       '/goals': goalsPage,
       '/reports': reportsPage,
+      '/recurring': recurringPage,
       '/settings': settingsPage,
       '/login': authPage,
       '/register': authPage
@@ -42,12 +45,12 @@ export const app = {
     router.init(routes);
   },
 
-  async renderLayout() {
+  renderLayout() {
     const appEl = document.getElementById('app');
     if (!appEl) return;
     if (!this.currentUser) {
       appEl.innerHTML = '<div id="page-container" style="background:var(--canvas); min-height:100vh;"></div>';
-      router.navigate('/login');
+      router.resolve();
       return;
     }
     appEl.innerHTML = `
@@ -60,21 +63,28 @@ export const app = {
         <div id="tutorial-container"></div>
       </div>
     `;
-    await sidebar.render();
-    await topbar.render();
-    await tutorialPanel.render();
+    sidebar.render();
+    topbar.render();
+    tutorialPanel.render();
     router.resolve();
   },
 
   setupAuthListener() {
     this.unsubscribeAuth = authService.onAuthStateChange(async (event, session) => {
+      const wasLoggedOut = !this.currentUser;
       this.currentUser = session?.user || null;
+
       if (this.currentUser) {
-        const displayName = this.currentUser?.user_metadata?.display_name || this.currentUser?.email?.split('@')[0] || 'User';
-        sidebar.updateUser(displayName);
-        topbar.updateUser(displayName);
-        if (window.location.pathname === '/login' || window.location.pathname === '/register') {
-          router.navigate('/');
+        const onAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register';
+        if (onAuthPage || wasLoggedOut) {
+          // Shell sebelumnya (saat belum login) cuma berisi #page-container
+          // polos tanpa sidebar/topbar/tutorial — bangun ulang shell penuh.
+          if (onAuthPage) window.history.pushState({}, '', '/');
+          this.renderLayout();
+        } else {
+          const displayName = this.currentUser?.user_metadata?.display_name || this.currentUser?.email?.split('@')[0] || 'User';
+          sidebar.updateUser(displayName);
+          topbar.updateUser(displayName);
         }
       } else {
         if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {

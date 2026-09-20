@@ -16,7 +16,7 @@
   --emerald:#1E8F63; --emerald-strong:#136B49; --emerald-soft:#E1F3EA;
   --coral:#C34C3C; --coral-soft:#FBE7E3;
   --amber:#B6790F; --amber-soft:#FBEAD0;
-  --indigo:#4A5FD1; --indigo-soft:#E9EBFB;
+  --indigo:#4A5FD1; --indigo-strong:#3646A8; --indigo-soft:#E9EBFB;
   --violet:#7C5CD6; --violet-soft:#EEE8FB;
   --shadow:0 1px 2px rgba(28,27,34,.06), 0 8px 24px -12px rgba(28,27,34,.10);
 }
@@ -84,13 +84,27 @@ body{ background:var(--canvas); color:var(--ink); font-family:'Inter',sans-serif
 .toast-info{ background:var(--indigo); }
 
 /* ---------- panel tutorial (kanan) ---------- */
-#tutorial-panel{ display:flex; flex-direction:column; position:fixed; top:0; bottom:0; right:0; z-index:30; width:300px; height:100vh; background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .2s ease; }
+#tutorial-panel{ display:flex; flex-direction:column; position:fixed; inset-y:0; right:0; z-index:30; width:300px; background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .2s ease; }
 @media(min-width:1280px){ #tutorial-panel{ transform:translateX(0); } }
 #tutorial-panel.open{ transform:translateX(0); }
 #tutorial-backdrop{ position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.4); display:none; }
 @media(min-width:1280px){ #tutorial-backdrop{ display:none !important; } }
 #tutorial-backdrop.open{ display:block; }
 .step-num{ width:22px; height:22px; border-radius:999px; background:var(--indigo-soft); color:var(--indigo); font-size:.7rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+/* ---------- halaman login/daftar ---------- */
+.font-mono{ font-family:'JetBrains Mono', monospace; }
+.field-error{ color:var(--coral); }
+.field-error input{ outline:2px solid var(--coral); }
+.tab-btn.active{ background:var(--surface); color:var(--ink); box-shadow:var(--shadow); }
+.tab-btn:not(.active){ color:var(--ink-muted); }
+.fade-swap{ animation:fadeSwap .28s ease; }
+@keyframes fadeSwap{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+.strength-bar{ height:4px; border-radius:99px; background:var(--border); overflow:hidden; }
+.strength-fill{ height:100%; width:0%; transition:width .25s ease, background-color .25s ease; }
+.dot-grid{ background-image: radial-gradient(rgba(255,255,255,.14) 1px, transparent 1px); background-size: 22px 22px; }
+.spinner{ width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; animation:spin .7s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
 /* ---------- animasi ---------- */
 .pulse-once{ animation: pulseOnce .7s ease; }

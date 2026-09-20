@@ -56,10 +56,10 @@ export const dashboardPage = {
             <div>
               <p class="text-sm" style="color:var(--ink-muted)">Total saldo — semua akun</p>
               <p id="stat-balance" class="font-display text-5xl md:text-6xl font-semibold mt-2 tabular-nums" style="color:var(--ink)">Rp0</p>
-              <div class="mt-1.5 flex items-center gap-1.5 text-sm font-medium" style="color:var(--emerald)">
-                ${icon('trendUp', 'w-4 h-4')}
-                <span id="stat-net">+Rp0</span> bersih bulan ini
-              </div>
+<div class="mt-1.5 flex items-center gap-1.5 text-sm font-medium" id="stat-net-row" style="color:var(--emerald)">
+                 ${icon('trendUp', 'w-4 h-4')}
+                 <span id="stat-net">+Rp0</span> bersih bulan ini
+               </div>
             </div>
             <label class="flex items-center gap-2 text-xs font-medium cursor-pointer select-none" style="color:var(--ink-muted)">
               Bandingkan bulan lalu
@@ -75,7 +75,12 @@ export const dashboardPage = {
         </div>
 
         <div class="card card-hover rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-          <p class="text-sm mb-3" style="color:var(--ink-muted)">Skor kesehatan finansial</p>
+          <div class="flex items-center gap-1.5 mb-3" style="color:var(--ink-muted)">
+            <p class="text-sm">Skor kesehatan finansial</p>
+            <button id="btn-health-info" class="inline-flex items-center justify-center w-5 h-5 rounded btn-press" style="cursor:pointer; background:transparent; border:none; padding:0">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" aria-hidden="true" style="stroke:var(--ink-muted); stroke-width:1.8"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8h.01M11 12h1v4h1"/></svg>
+            </button>
+          </div>
           <svg viewBox="0 0 140 140" class="w-32 h-32">
             <circle cx="70" cy="70" r="58" fill="none" stroke="var(--surface-alt)" stroke-width="12"/>
             <circle id="health-ring" cx="70" cy="70" r="58" fill="none" stroke="var(--indigo)" stroke-width="12" stroke-linecap="round"
@@ -84,11 +89,23 @@ export const dashboardPage = {
             <text x="70" y="86" text-anchor="middle" font-size="11" fill="var(--ink-muted)">dari 100</text>
           </svg>
           <p id="health-label" class="mt-3 text-sm font-medium" style="color:var(--indigo)">—</p>
-          <p class="mt-1 text-xs leading-relaxed" style="color:var(--ink-muted)">Indikator internal, bukan nasihat finansial profesional.</p>
-        </div>
-      </div>
+<p class="mt-1 text-xs leading-relaxed" style="color:var(--ink-muted)">Indikator internal, bukan nasihat finansial profesional.</p>
+         </div>
+       </div>
 
-      <!-- CHARTS -->
+       <!-- MODAL: HEALTH SCORE INFO -->
+       <div id="health-info-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+         <div id="health-info-backdrop" class="absolute inset-0 modal-backdrop"></div>
+         <div class="relative w-full max-w-md rounded-2xl p-6 card z-10">
+           <div class="flex items-center justify-between mb-4">
+             <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Cara Kerja Skor Kesehatan Finansial</h3>
+             <button type="button" id="btn-close-health-info" class="p-1.5 rounded-lg btn-press" style="color:var(--ink-muted)">${icon('close', 'w-5 h-5')}</button>
+           </div>
+           <div id="health-info-content" class="text-sm space-y-3" style="color:var(--ink-muted)"></div>
+         </div>
+       </div>
+
+       <!-- CHARTS -->
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
         <div class="lg:col-span-3 card card-hover rounded-2xl p-6">
           <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
@@ -325,23 +342,23 @@ export const dashboardPage = {
 
   healthScore(totals) {
     if (!this.data.accounts.length && !this.data.transactions.length && !this.data.budgets.length) return 0;
-    const budgetPcts = this.data.budgets.map(b => {
-      const spent = this.data.transactions.filter(t => t.type === 'expense' && t.category_id === b.category_id && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
-      return Number(b.amount) > 0 ? (spent / Number(b.amount)) * 100 : 0;
-    });
-    const overage = budgetPcts.length ? budgetPcts.reduce((s, p) => s + Math.max(0, p - 100), 0) / budgetPcts.length : 0;
-    const budgetScore = Math.max(0, 100 - overage);
-    const savingsScore = Math.max(0, Math.min(100, totals.savings));
-    return Math.round(savingsScore * 0.65 + budgetScore * 0.35);
-  },
+const budgetPcts = this.data.budgets.map(b => {
+       const spent = this.data.transactions.filter(t => t.type === 'expense' && (!b.category_id || t.category_id === b.category_id) && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
+       return Number(b.amount) > 0 ? (spent / Number(b.amount)) * 100 : 0;
+     });
+     const overage = budgetPcts.length ? budgetPcts.reduce((s, p) => s + Math.max(0, p - 100), 0) / budgetPcts.length : 0;
+     const budgetScore = Math.max(0, 100 - overage);
+     const savingsScore = Math.max(0, Math.min(100, totals.savings));
+     return Math.round(savingsScore * 0.65 + budgetScore * 0.35);
+   },
 
-  buildInsights(totals) {
-    const insights = [];
-    this.data.budgets.forEach(b => {
-      const cat = this.data.categories.find(c => c.id === b.category_id);
-      const spent = this.data.transactions.filter(t => t.type === 'expense' && t.category_id === b.category_id && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
-      const pct = Number(b.amount) > 0 ? Math.round((spent / Number(b.amount)) * 100) : 0;
-      if (pct >= 80 && cat) {
+   buildInsights(totals) {
+     const insights = [];
+     this.data.budgets.forEach(b => {
+       const cat = this.data.categories.find(c => c.id === b.category_id);
+       const spent = this.data.transactions.filter(t => t.type === 'expense' && (!b.category_id || t.category_id === b.category_id) && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
+       const pct = Number(b.amount) > 0 ? Math.round((spent / Number(b.amount)) * 100) : 0;
+       if (pct >= 80 && cat) {
         insights.push({ id: `budget-${b.id}`, icon: 'warning', tone: pct >= 100 ? 'coral' : 'amber', html: `Budget <b>${cat.name}</b> sudah ${pct}% terpakai.` });
       }
     });
@@ -390,6 +407,7 @@ export const dashboardPage = {
     const el = (id) => document.getElementById(id);
     this.countUp(el('stat-balance'), totals.balance, { prefix: 'Rp' });
     el('stat-net').textContent = (totals.net >= 0 ? '+' : '-') + rupiah(Math.abs(totals.net));
+     el('stat-net-row').style.color = totals.net >= 0 ? 'var(--emerald)' : 'var(--coral)';
     this.countUp(el('stat-income'), totals.income, { prefix: 'Rp' });
     this.countUp(el('stat-expense'), totals.expense, { prefix: 'Rp' });
     this.countUp(el('stat-savings'), totals.savings, { suffix: '%' });
@@ -467,23 +485,23 @@ export const dashboardPage = {
     document.getElementById('activity-empty').classList.toggle('hidden', list.length > 0);
   },
 
-  renderBudgets() {
-    const totalSpent = this.data.budgets.reduce((s, b) => {
-      return s + this.data.transactions.filter(t => t.type === 'expense' && t.category_id === b.category_id && this.isThisMonth(t.date)).reduce((s2, t) => s2 + Number(t.amount || 0), 0);
-    }, 0);
-    const totalBudget = this.data.budgets.reduce((s, b) => s + Number(b.amount || 0), 0);
-    document.getElementById('budget-summary').textContent = `${rupiah(totalSpent)} terpakai dari ${rupiah(totalBudget)}`;
+renderBudgets() {
+     const totalSpent = this.data.budgets.reduce((s, b) => {
+       return s + this.data.transactions.filter(t => t.type === 'expense' && (!b.category_id || t.category_id === b.category_id) && this.isThisMonth(t.date)).reduce((s2, t) => s2 + Number(t.amount || 0), 0);
+     }, 0);
+     const totalBudget = this.data.budgets.reduce((s, b) => s + Number(b.amount || 0), 0);
+     document.getElementById('budget-summary').textContent = `${rupiah(totalSpent)} terpakai dari ${rupiah(totalBudget)}`;
 
-    document.getElementById('budget-list').innerHTML = this.data.budgets.map(b => {
-      const cat = this.data.categories.find(c => c.id === b.category_id);
-      const spent = this.data.transactions.filter(t => t.type === 'expense' && t.category_id === b.category_id && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
-      const realPct = Number(b.amount) > 0 ? Math.round((spent / Number(b.amount)) * 100) : 0;
-      const pct = Math.min(100, realPct);
-      const st = this.budgetStatus(realPct);
+     document.getElementById('budget-list').innerHTML = this.data.budgets.map(b => {
+       const cat = this.data.categories.find(c => c.id === b.category_id);
+       const spent = this.data.transactions.filter(t => t.type === 'expense' && (!b.category_id || t.category_id === b.category_id) && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
+       const realPct = Number(b.amount) > 0 ? Math.round((spent / Number(b.amount)) * 100) : 0;
+       const pct = Math.min(100, realPct);
+       const st = this.budgetStatus(realPct);
       return `
       <div class="rounded-xl p-4" style="background:var(--surface-alt)">
         <div class="flex justify-between items-start mb-2">
-          <p class="text-sm font-medium flex items-center gap-2" style="color:var(--ink)">${icon(categoryIcon(cat?.name || ''), 'w-4 h-4')} ${cat?.name || 'N/A'}</p>
+          <p class="text-sm font-medium flex items-center gap-2" style="color:var(--ink)">${icon(categoryIcon(cat?.name || ''), 'w-4 h-4')} ${cat?.name || (b.category_id ? 'N/A' : 'Semua Kategori')}</p>
           <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:var(--${st.tone}-soft); color:var(--${st.tone})">${st.label}</span>
         </div>
         <div class="h-2 rounded-full mb-2" style="background:var(--border)"><div class="h-2 rounded-full bar-fill" data-w="${pct}" style="background:var(--${st.tone})"></div></div>
@@ -652,9 +670,14 @@ export const dashboardPage = {
     document.querySelectorAll('.tx-type-btn').forEach(b => b.addEventListener('click', () => this.setTxType(b.dataset.txtype)));
     document.getElementById('tx-form').addEventListener('submit', (e) => this.submitTransaction(e));
 
-    document.getElementById('btn-export-excel').addEventListener('click', () => this.exportExcel());
-    document.getElementById('btn-export-pdf').addEventListener('click', () => this.exportPDF());
-    document.getElementById('btn-scan-receipt').addEventListener('click', () => this.scanReceipt());
+document.getElementById('btn-export-excel').addEventListener('click', () => this.exportExcel());
+     document.getElementById('btn-export-pdf').addEventListener('click', () => this.exportPDF());
+     document.getElementById('btn-scan-receipt').addEventListener('click', () => this.scanReceipt());
+
+     document.getElementById('btn-health-info').addEventListener('click', () => this.showHealthInfo());
+     document.getElementById('btn-close-health-info').addEventListener('click', () => this.closeHealthInfo());
+     document.getElementById('health-info-backdrop').addEventListener('click', () => this.closeHealthInfo());
+     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.closeHealthInfo(); });
 
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -736,13 +759,59 @@ export const dashboardPage = {
     setTimeout(() => document.getElementById('tx-amount').focus(), 50);
   },
 
-  closeModal() {
-    const modal = document.getElementById('tx-modal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  },
+closeModal() {
+     const modal = document.getElementById('tx-modal');
+     modal.classList.add('hidden');
+     modal.classList.remove('flex');
+   },
 
-  async submitTransaction(e) {
+   showHealthInfo() {
+     const totals = this.totals();
+     const budgetPcts = this.data.budgets.map(b => {
+       const spent = this.data.transactions.filter(t => t.type === 'expense' && t.category_id === b.category_id && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
+       return Number(b.amount) > 0 ? (spent / Number(b.amount)) * 100 : 0;
+     });
+     const overage = budgetPcts.length ? budgetPcts.reduce((s, p) => s + Math.max(0, p - 100), 0) / budgetPcts.length : 0;
+     const budgetScore = Math.max(0, 100 - overage);
+     const savingsScore = Math.max(0, Math.min(100, totals.savings));
+     const score = Math.round(savingsScore * 0.65 + budgetScore * 0.35);
+
+     const el = (id) => document.getElementById(id);
+     el('health-info-content').innerHTML = `
+       <div class="rounded-xl p-4" style="background:var(--surface-alt)">
+         <p class="font-semibold mb-2" style="color:var(--ink)">Rumus</p>
+         <p class="font-mono text-xs leading-relaxed">
+           <code>Skor = SavingsScore × 0.65 + BudgetScore × 0.35</code><br>
+           <code>SavingsScore = (Pemasukan − Pengeluaran) ÷ Pemasukan × 100</code><br>
+           <code>BudgetScore = 100 − rata-rata overage budget</code>
+         </p>
+       </div>
+       <div class="rounded-xl p-4" style="background:var(--surface-alt)">
+         <p class="font-semibold mb-3" style="color:var(--ink)">Perhitungan Bulan Ini</p>
+         <div class="space-y-2 text-xs">
+           <div class="flex justify-between"><span>Pemasukan</span><span class="font-semibold" style="color:var(--ink)">${rupiah(totals.income)}</span></div>
+           <div class="flex justify-between"><span>Pengeluaran</span><span class="font-semibold" style="color:var(--ink)">${rupiah(totals.expense)}</span></div>
+           <div class="flex justify-between"><span>Net (Pemasukan − Pengeluaran)</span><span class="font-semibold" style="color:var(--ink)">${rupiah(totals.net)}</span></div>
+           <div class="flex justify-between border-t pt-2" style="border-color:var(--border)"><span>SavingsScore</span><span class="font-semibold" style="color:var(--ink)">${savingsScore.toFixed(1)} (${totals.savings}%)</span></div>
+           <div class="flex justify-between"><span>BudgetScore (overage rata-rata: ${overage.toFixed(1)}%)</span><span class="font-semibold" style="color:var(--ink)">${budgetScore.toFixed(1)}</span></div>
+           <div class="flex justify-between border-t pt-2" style="border-color:var(--border)"><span class="font-semibold" style="color:var(--ink)">Skor Akhir</span><span class="font-display text-lg font-bold" style="color:var(--indigo)">${score} / 100</span></div>
+         </div>
+       </div>
+       <button type="button" id="btn-health-info-ok" class="w-full py-2 rounded-lg text-sm font-medium btn-press" style="background:var(--indigo); color:#fff;">Tutup</button>
+     `;
+     const modal = document.getElementById('health-info-modal');
+     modal.classList.remove('hidden');
+     modal.classList.add('flex');
+     document.getElementById('btn-health-info-ok').addEventListener('click', () => this.closeHealthInfo());
+   },
+
+   closeHealthInfo() {
+     const modal = document.getElementById('health-info-modal');
+     modal.classList.add('hidden');
+     modal.classList.remove('flex');
+   },
+
+   async submitTransaction(e) {
     e.preventDefault();
     const amount = Number(document.getElementById('tx-amount').value);
     const description = document.getElementById('tx-desc').value.trim();

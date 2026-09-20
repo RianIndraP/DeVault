@@ -1,4 +1,4 @@
-import { budgetService, categoryService } from '../services/database.js';
+import { budgetService, categoryService, transactionService } from '../services/database.js';
 import { icon, ICON_PATHS } from '../components/icons.js';
 import { showToast } from '../components/toast.js';
 import { tutorialPanel } from '../components/tutorial.js';
@@ -19,6 +19,7 @@ const now = new Date();
 export const budgetsPage = {
   data: [],
   categories: [],
+  transactions: [],
   monthFilter: now.getMonth() + 1,
   yearFilter: now.getFullYear(),
   statusFilter: 'all',
@@ -111,25 +112,30 @@ export const budgetsPage = {
 
   catInfo(id) { return this.categories.find(c => c.id === id); },
 
-  async loadData() {
-    const grid = document.getElementById('budgets-grid');
-    const { data, error } = await budgetService.getAll();
-    if (error) {
-      grid.innerHTML = `<div class="col-span-full card rounded-2xl p-8 text-center" style="border-color:var(--coral)">
-        <p class="font-medium" style="color:var(--coral)">Gagal memuat budget</p>
-        <p class="text-sm mt-1" style="color:var(--ink-muted)">Coba muat ulang halaman.</p>
-      </div>`;
-      document.getElementById('bud-summary').innerHTML = '';
-      return;
-    }
-    this.data = data || [];
-    this.renderSummary();
-    this.renderGrid();
-  },
+async loadData() {
+     const grid = document.getElementById('budgets-grid');
+     const { data: budgets, error: budErr } = await budgetService.getAll();
+     const { data: tx, error: txErr } = await transactionService.getAll();
+     if (budErr || !budgets) {
+       grid.innerHTML = `<div class="col-span-full card rounded-2xl p-8 text-center" style="border-color:var(--coral)">
+         <p class="font-medium" style="color:var(--coral)">Gagal memuat budget</p>
+         <p class="text-sm mt-1" style="color:var(--ink-muted)">Coba muat ulang halaman.</p>
+       </div>`;
+       document.getElementById('bud-summary').innerHTML = '';
+       return;
+     }
+     this.data = budgets || [];
+     this.transactions = tx || [];
+     this.renderSummary();
+     this.renderGrid();
+   },
 
-  getMonthly() {
-    return this.data.filter(b => b.month === this.monthFilter && b.year === this.yearFilter);
-  },
+   getMonthly() {
+     return this.data.filter(b => b.month === this.monthFilter && b.year === this.yearFilter).map(b => {
+       const spent = this.transactions.filter(t => t.type === 'expense' && (!b.category_id || t.category_id === b.category_id) && this.isThisMonth(t.date)).reduce((s, t) => s + Number(t.amount || 0), 0);
+       return { ...b, current_amount: spent };
+     });
+   },
 
   getFiltered() {
     let list = this.getMonthly().map(b => {
@@ -137,10 +143,12 @@ export const budgetsPage = {
       return { ...b, pct, status: statusFor(pct) };
     });
     if (this.statusFilter !== 'all') list = list.filter(b => b.status.key === this.statusFilter);
-    return list.sort((a, b) => b.pct - a.pct);
-  },
+return list.sort((a, b) => b.pct - a.pct);
+   },
 
-  renderSummary() {
+   isThisMonth(d) { const dt = new Date(d), n = new Date(); return dt.getMonth() === n.getMonth() && dt.getFullYear() === n.getFullYear(); },
+
+   renderSummary() {
     const monthly = this.getMonthly();
     const totalBudget = monthly.reduce((s, b) => s + Number(b.amount), 0);
     const totalUsed = monthly.reduce((s, b) => s + Number(b.current_amount), 0);

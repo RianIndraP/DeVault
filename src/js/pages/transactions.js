@@ -347,23 +347,27 @@ export const transactionsPage = {
     }
   },
 
-  async save() {
-    const type = document.getElementById('tx-type').value;
-    const payload = {
-      type,
-      account_id: document.getElementById('tx-account').value,
-      account_to_id: type === 'transfer' ? document.getElementById('tx-account-to').value : null,
-      category_id: type === 'expense' ? document.getElementById('tx-category').value : null,
-      date: document.getElementById('tx-date').value,
-      description: document.getElementById('tx-desc').value.trim(),
-      amount: parseFloat(document.getElementById('tx-amount').value)
-    };
-    if (!payload.date || !payload.description || !payload.amount || payload.amount <= 0 || !payload.account_id) {
-      showToast('Lengkapi semua kolom.', 'error'); return;
-    }
-    if (type === 'transfer' && payload.account_id === payload.account_to_id) {
-      showToast('Akun tujuan harus berbeda.', 'error'); return;
-    }
+async save() {
+     const type = document.getElementById('tx-type').value;
+     const dateVal = document.getElementById('tx-date').value;
+     const [year, month] = dateVal ? [parseInt(dateVal.split('-')[0]), parseInt(dateVal.split('-')[1])] : [new Date().getFullYear(), new Date().getMonth() + 1];
+     const payload = {
+       type,
+       account_id: document.getElementById('tx-account').value,
+       ...(type === 'transfer' ? { account_to_id: document.getElementById('tx-account-to').value } : {}),
+       category_id: type === 'expense' ? document.getElementById('tx-category').value : null,
+       date: dateVal,
+       description: document.getElementById('tx-desc').value.trim(),
+       amount: parseFloat(document.getElementById('tx-amount').value),
+       month,
+       year
+     };
+     if (!payload.date || !payload.description || !payload.amount || payload.amount <= 0 || !payload.account_id) {
+       showToast('Lengkapi semua kolom.', 'error'); return;
+     }
+     if (type === 'transfer' && payload.account_id === payload.account_to_id) {
+       showToast('Akun tujuan harus berbeda.', 'error'); return;
+     }
 
     const id = document.getElementById('tx-id').value;
     const submitBtn = document.querySelector('#tx-form button[type="submit"]');
