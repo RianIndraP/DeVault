@@ -234,6 +234,9 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER;
 -- AUTO-CREATE PROFILE ON USER REGISTER
 -- ============================================
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 SECURITY DEFINER SET search_path = public
