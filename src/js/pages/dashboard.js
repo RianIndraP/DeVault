@@ -18,7 +18,7 @@ import { showToast } from '../components/toast.js';
 export const dashboardPage = {
   data: { accounts: [], transactions: [], categories: [], budgets: [], goals: [] },
   ui: { activeType: 'all', activeCategory: null, search: '', txType: 'expense' },
-  charts: { ie: null, daily: null },
+  charts: { ie: null, daily: null, expMonth: null },
   _globalListenersBound: false,
 
   async render() {
@@ -105,27 +105,43 @@ export const dashboardPage = {
          </div>
        </div>
 
-       <!-- CHARTS -->
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
-        <div class="lg:col-span-3 card card-hover rounded-2xl p-6">
-          <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
-            <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Pemasukan vs pengeluaran</h3>
-            <div class="flex gap-1 text-xs">
-              <button class="period-btn chip active" data-range="6">6 bulan</button>
-              <button class="period-btn chip" data-range="3">3 bulan</button>
-            </div>
-          </div>
-          <p class="text-sm mb-4" style="color:var(--ink-muted)">Berdasarkan seluruh riwayat transaksi</p>
-          <canvas id="ie-chart" height="220"></canvas>
-        </div>
-        <div class="lg:col-span-2 card card-hover rounded-2xl p-6">
-          <h3 class="font-display text-lg font-semibold mb-1" style="color:var(--ink)">Pengeluaran harian</h3>
-          <p class="text-sm mb-4" style="color:var(--ink-muted)">Bulan berjalan</p>
-          <canvas id="daily-chart" height="220"></canvas>
-        </div>
-      </div>
+<!-- CHARTS -->
+       <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+         <div class="lg:col-span-3 card card-hover rounded-2xl p-6">
+           <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+             <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Pemasukan vs pengeluaran</h3>
+             <div class="flex gap-1 text-xs">
+               <button class="period-btn chip active" data-range="6">6 bulan</button>
+               <button class="period-btn chip" data-range="3">3 bulan</button>
+             </div>
+           </div>
+           <p class="text-sm mb-4" style="color:var(--ink-muted)">Berdasarkan seluruh riwayat transaksi</p>
+           <canvas id="ie-chart" height="220"></canvas>
+         </div>
+         <div class="lg:col-span-2 card card-hover rounded-2xl p-6">
+           <h3 class="font-display text-lg font-semibold mb-1" style="color:var(--ink)">Pengeluaran harian</h3>
+           <p class="text-sm mb-4" style="color:var(--ink-muted)">Bulan berjalan</p>
+           <canvas id="daily-chart" height="220"></canvas>
+         </div>
+       </div>
 
-      <!-- CATEGORY + PATTERN -->
+       <!-- EXPENSE PER MONTH -->
+       <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+         <div class="lg:col-span-5 card card-hover rounded-2xl p-6">
+           <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+             <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Pengeluaran per bulan</h3>
+             <div class="flex gap-1 text-xs">
+               <button class="exp-month-btn chip active" data-months="12">12 bulan</button>
+               <button class="exp-month-btn chip" data-months="6">6 bulan</button>
+               <button class="exp-month-btn chip" data-months="3">3 bulan</button>
+             </div>
+           </div>
+           <p class="text-sm mb-4" style="color:var(--ink-muted)">Berdasarkan seluruh riwayat transaksi pengeluaran</p>
+           <canvas id="exp-month-chart" height="200"></canvas>
+         </div>
+       </div>
+
+       <!-- CATEGORY + PATTERN -->
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
         <div class="lg:col-span-3 card card-hover rounded-2xl p-6">
           <div class="flex items-center justify-between mb-4">
@@ -276,10 +292,28 @@ export const dashboardPage = {
       income.push((map[k]?.income || 0) / 1000000);
       expense.push((map[k]?.expense || 0) / 1000000);
     }
-    return { labels, income, expense };
-  },
+return { labels, income, expense };
+   },
 
-  dailySeries() {
+   monthlyExpenses(count) {
+     const now = new Date();
+     const map = {};
+     this.data.transactions.filter(t => t.type === 'expense').forEach(t => {
+       const dt = new Date(t.date);
+       const k = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+       map[k] = (map[k] || 0) + Number(t.amount || 0);
+     });
+     const labels = [], data = [];
+     for (let i = count - 1; i >= 0; i--) {
+       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+       const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+       labels.push(d.toLocaleDateString('id-ID', { month: 'short' }));
+       data.push(map[k] || 0);
+     }
+     return { labels, data };
+   },
+
+   dailySeries() {
     const now = new Date();
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const totals = Array(daysInMonth).fill(0);
@@ -618,12 +652,30 @@ renderBudgets() {
     }));
 
     const daily = this.dailySeries();
-    this.charts.daily = new Chart(document.getElementById('daily-chart'), {
-      type: 'bar',
-      data: { labels: daily.labels, datasets: [{ label: 'Pengeluaran (Rp ribu)', data: daily.values, backgroundColor: cCoral + '99', borderRadius: 4, maxBarThickness: 18 }] },
-      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
-    });
-  },
+this.charts.daily = new Chart(document.getElementById('daily-chart'), {
+       type: 'bar',
+       data: { labels: daily.labels, datasets: [{ label: 'Pengeluaran (Rp ribu)', data: daily.values, backgroundColor: cCoral + '99', borderRadius: 4, maxBarThickness: 18 }] },
+       options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+     });
+
+     if (this.charts.expMonth) this.charts.expMonth.destroy();
+     const exp12 = this.monthlyExpenses(12);
+     this.charts.expMonth = new Chart(document.getElementById('exp-month-chart'), {
+       type: 'bar',
+       data: { labels: exp12.labels, datasets: [{ label: 'Pengeluaran (Rp juta)', data: exp12.data.map(v => v / 1000000), backgroundColor: cCoral + '88', borderColor: cCoral, borderWidth: 1, borderRadius: 4, maxBarThickness: 24 }] },
+       options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+     });
+
+     document.querySelectorAll('.exp-month-btn').forEach(btn => btn.addEventListener('click', () => {
+       document.querySelectorAll('.exp-month-btn').forEach(b => b.classList.remove('active'));
+       btn.classList.add('active');
+       const months = parseInt(btn.dataset.months);
+       const expData = this.monthlyExpenses(months);
+       this.charts.expMonth.data.labels = expData.labels;
+       this.charts.expMonth.data.datasets[0].data = expData.data.map(v => v / 1000000);
+       this.charts.expMonth.update();
+     }));
+   },
 
   observeBars() {
     if (this._barObserver) this._barObserver.disconnect();
