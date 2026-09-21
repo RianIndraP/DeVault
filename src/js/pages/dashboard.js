@@ -322,18 +322,38 @@ return { labels, income, expense };
      return { labels, data };
    },
 
-   dailySeries() {
-    const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const totals = Array(daysInMonth).fill(0);
-    this.data.transactions.filter(t => t.type === 'expense' && this.isThisMonth(t.date)).forEach(t => {
-      const day = new Date(t.date).getDate();
-      totals[day - 1] += Number(t.amount || 0) / 1000;
-    });
-    return { labels: Array.from({ length: daysInMonth }, (_, i) => i + 1), values: totals };
-  },
+dailySeries() {
+     const now = new Date();
+     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+     const totals = Array(daysInMonth).fill(0);
+     this.data.transactions.filter(t => t.type === 'expense' && this.isThisMonth(t.date)).forEach(t => {
+       const day = new Date(t.date).getDate();
+       totals[day - 1] += Number(t.amount || 0) / 1000;
+     });
+     return { labels: Array.from({ length: daysInMonth }, (_, i) => i + 1), values: totals };
+   },
 
-  categoryBreakdown() {
+   dailyFinancialTimeline() {
+     const now = new Date();
+     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+     const openingBalance = this.data.accounts.reduce((s, a) => s + Number(a.opening_balance || 0), 0);
+     const txs = this.data.transactions.filter(t => this.isThisMonth(t.date));
+     const income = Array(daysInMonth).fill(0);
+     const expense = Array(daysInMonth).fill(0);
+     const balance = Array(daysInMonth).fill(0);
+     let runningBalance = openingBalance;
+     for (let d = 1; d <= daysInMonth; d++) {
+       txs.filter(t => new Date(t.date).getDate() === d).forEach(t => {
+         if (t.type === 'income') { income[d - 1] += Number(t.amount || 0); runningBalance += Number(t.amount || 0); }
+         else if (t.type === 'expense') { expense[d - 1] += Number(t.amount || 0); runningBalance -= Number(t.amount || 0); }
+       });
+       balance[d - 1] = runningBalance;
+     }
+     const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+     return { labels, income, expense, balance };
+   },
+
+   categoryBreakdown() {
     const txThisMonth = this.data.transactions.filter(t => t.type === 'expense' && this.isThisMonth(t.date));
     const totalExpense = txThisMonth.reduce((s, t) => s + Number(t.amount || 0), 0) || 1;
     return this.data.categories.map(c => {
@@ -668,12 +688,18 @@ this.charts.daily = new Chart(document.getElementById('daily-chart'), {
      });
 
 if (this.charts.budgetLine) this.charts.budgetLine.destroy();
-      const now = new Date();
-      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const timeline = this.dailyFinancialTimeline();
       this.charts.budgetLine = new Chart(document.getElementById('budget-line-chart'), {
         type: 'line',
-        data: { labels: daily.labels, datasets: [{ label: 'Pengeluaran harian (Rp)', data: daily.values, borderColor: cCoral, tension: 0, pointRadius: 2, pointHoverRadius: 5 }] },
-        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } } }
+        data: {
+          labels: timeline.labels,
+          datasets: [
+            { label: 'Pemasukan', data: timeline.income, borderColor: '#22c55e', backgroundColor: '#22c55e22', tension: 0, pointRadius: 2, pointHoverRadius: 5 },
+            { label: 'Pengeluaran', data: timeline.expense, borderColor: '#ef4444', backgroundColor: '#ef444422', tension: 0, pointRadius: 2, pointHoverRadius: 5 },
+            { label: 'Saldo', data: timeline.balance, borderColor: '#3b82f6', backgroundColor: '#3b82f622', tension: 0, pointRadius: 2, pointHoverRadius: 5 }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true } } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } } }
       });
    },
 
