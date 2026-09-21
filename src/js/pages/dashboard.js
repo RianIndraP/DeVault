@@ -661,8 +661,8 @@ this.charts.daily = new Chart(document.getElementById('daily-chart'), {
      if (this.charts.expMonth) this.charts.expMonth.destroy();
      const exp12 = this.monthlyExpenses(12);
      this.charts.expMonth = new Chart(document.getElementById('exp-month-chart'), {
-       type: 'bar',
-       data: { labels: exp12.labels, datasets: [{ label: 'Pengeluaran (Rp juta)', data: exp12.data.map(v => v / 1000000), backgroundColor: cCoral + '88', borderColor: cCoral, borderWidth: 1, borderRadius: 4, maxBarThickness: 24 }] },
+       type: 'line',
+       data: { labels: exp12.labels, datasets: [{ label: 'Pengeluaran (Rp juta)', data: exp12.data.map(v => v / 1000000), borderColor: cCoral, backgroundColor: cCoral + '22', tension: .35, fill: true, pointRadius: 4, pointBackgroundColor: cCoral, pointBorderColor: cCoral, pointHoverRadius: 6 }] },
        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
      });
 
