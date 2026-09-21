@@ -21,7 +21,9 @@ CREATE TABLE IF NOT EXISTS accounts (
     name TEXT NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('bank', 'e_wallet', 'cash', 'other')),
     initial_balance DECIMAL(15,2) DEFAULT 0,
+    opening_balance DECIMAL(15,2) DEFAULT 0,
     current_balance DECIMAL(15,2) DEFAULT 0,
+    opening_date DATE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -325,5 +327,16 @@ CREATE TRIGGER update_goals_updated_at
     BEFORE UPDATE ON goals FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER update_recurring_transactions_updated_at
     BEFORE UPDATE ON recurring_transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
--- ============================================
-SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;
+ -- ============================================
+ -- ADD NEW COLUMNS FOR OPENING BALANCE FEATURE
+ -- ============================================
+ DO $$ BEGIN
+     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='accounts' AND column_name='opening_balance') THEN
+         ALTER TABLE accounts ADD COLUMN opening_balance DECIMAL(15,2) DEFAULT 0;
+     END IF;
+     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='accounts' AND column_name='opening_date') THEN
+         ALTER TABLE accounts ADD COLUMN opening_date DATE;
+     END IF;
+ END $$;
+ -- ============================================
+ SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;

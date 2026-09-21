@@ -1,4 +1,4 @@
-import { accountService } from '../services/database.js';
+import { accountService, transactionService } from '../services/database.js';
 import { icon } from '../components/icons.js';
 import { showToast } from '../components/toast.js';
 import { tutorialPanel } from '../components/tutorial.js';
@@ -74,10 +74,29 @@ export const accountsPage = {
               <input type="number" id="acc-balance" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)" placeholder="0" />
             </div>
           </div>
-          <button type="submit" class="w-full mt-5 py-2.5 rounded-lg text-white font-semibold focus-ring btn-press text-sm" style="background:var(--indigo)">Simpan akun</button>
-        </form>
-      </div>
-    `;
+<button type="submit" class="w-full mt-5 py-2.5 rounded-lg text-white font-semibold focus-ring btn-press text-sm" style="background:var(--indigo)">Simpan akun</button>
+         </form>
+       </div>
+       <div id="verify-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+         <div class="rounded-2xl p-6 w-full max-w-md card">
+           <h3 class="font-display text-lg font-semibold mb-2" style="color:var(--ink)">Verifikasi Saldo Awal</h3>
+           <p class="text-sm mb-3" style="color:var(--ink-muted)">Saldo akhir bulan lalu akan menjadi saldo awal bulan ini. Apakah jumlahnya sudah benar?</p>
+           <div class="mb-4 p-3 rounded-lg" style="background:var(--surface-alt)">
+             <p class="text-xs" style="color:var(--ink-muted)">Saldo yang dihitung</p>
+             <p class="text-xl font-bold font-display tabular-nums" id="verify-amount" style="color:var(--indigo)">Rp0</p>
+           </div>
+           <div class="mb-4">
+             <label class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Saldo aktual (jika berbeda)</label>
+             <input type="number" id="verify-adjust" min="0" step="0.01" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)" placeholder="Kosongkan jika sama" />
+             <p class="text-xs mt-1" style="color:var(--ink-muted)">Jika ada selisih, isi di sini. Selisih akan dicatat sebagai penyesuaian.</p>
+           </div>
+           <div class="flex gap-2">
+             <button id="btn-verify-skip" class="flex-1 py-2.5 rounded-lg text-sm font-semibold focus-ring btn-press" style="background:var(--surface-alt); color:var(--ink-muted)">Lanjutkan</button>
+             <button id="btn-verify-confirm" class="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white focus-ring btn-press" style="background:var(--indigo)">Simpan</button>
+           </div>
+         </div>
+       </div>
+     `;
 
     tutorialPanel.setContent({
       eyebrow: 'HALAMAN INI',
@@ -97,24 +116,74 @@ export const accountsPage = {
     await this.loadData();
   },
 
-  async loadData() {
-    const grid = document.getElementById('accounts-grid');
-    const { data, error } = await accountService.getAll();
-    if (error) {
-      grid.innerHTML = `<div class="col-span-full card rounded-2xl p-8 text-center" style="border-color:var(--coral)">
-        <p class="font-medium" style="color:var(--coral)">Gagal memuat akun</p>
-        <p class="text-sm mt-1" style="color:var(--ink-muted)">Coba muat ulang halaman.</p>
-      </div>`;
-      document.getElementById('acc-summary').innerHTML = '';
-      return;
-    }
-    this.data = data || [];
-    this.renderSummary();
-    this.renderDistribution();
-    this.renderGrid();
-  },
+async loadData() {
+     const grid = document.getElementById('accounts-grid');
+     const { data, error } = await accountService.getAll();
+     if (error) {
+       grid.innerHTML = `<div class="col-span-full card rounded-2xl p-8 text-center" style="border-color:var(--coral)">
+         <p class="font-medium" style="color:var(--coral)">Gagal memuat akun</p>
+         <p class="text-sm mt-1" style="color:var(--ink-muted)">Coba muat ulang halaman.</p>
+       </div>`;
+       document.getElementById('acc-summary').innerHTML = '';
+       return;
+     }
+     this.data = data || [];
+     this.renderSummary();
+     this.renderDistribution();
+     this.renderGrid();
+     this.checkMonthlyVerification();
+   },
 
-  getFiltered() {
+   async checkMonthlyVerification() {
+     const today = new Date();
+     if (today.getDate() !== 1) return;
+     const thisMonthStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+     const accountsNeedingVerification = this.data.filter(a => {
+       if (!a.opening_date) return true;
+       const od = a.opening_date;
+       return !od.startsWith(thisMonthStr);
+     });
+     if (!accountsNeedingVerification.length) return;
+     const acc = accountsNeedingVerification[0];
+     const currentBalance = Number(acc.current_balance || 0);
+     document.getElementById('verify-amount').textContent = rupiah(currentBalance);
+     document.getElementById('verify-adjust').value = '';
+     document.getElementById('verify-modal').classList.remove('hidden');
+     document.getElementById('verify-modal').classList.add('flex');
+     document.getElementById('btn-verify-skip').onclick = async () => {
+       document.getElementById('verify-modal').classList.add('hidden');
+       if (!acc.opening_date) {
+         const openingDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+         await accountService.update(acc.id, { opening_balance: currentBalance, opening_date: openingDate });
+       }
+     };
+     document.getElementById('btn-verify-confirm').onclick = async () => {
+       const adjustVal = parseFloat(document.getElementById('verify-adjust').value) || 0;
+       const finalBalance = currentBalance + adjustVal;
+       document.getElementById('verify-modal').classList.add('hidden');
+       const openingDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+       const updates = { opening_balance: finalBalance, opening_date: openingDate };
+       if (adjustVal !== 0) {
+         updates.current_balance = finalBalance;
+         try {
+           await transactionService.create({
+             type: 'adjustment',
+             account_id: acc.id,
+             category_id: null,
+             date: openingDate,
+             description: 'Penyesuaian saldo awal bulan ini',
+             amount: Math.abs(adjustVal),
+             month: today.getMonth() + 1,
+             year: today.getFullYear()
+           });
+           await accountService.updateBalance(acc.id, finalBalance);
+         } catch(e) { console.warn('[Adjustment]', e.message); }
+       }
+       await accountService.update(acc.id, updates);
+       await this.loadData();
+       showToast(adjustVal !== 0 ? 'Saldo disesuaikan dengan penyesuaian.' : 'Saldo awal diverifikasi.', 'success');
+     };
+   },
     let list = [...this.data];
     if (this.filterType !== 'all') list = list.filter(a => a.type === this.filterType);
     if (this.search) {
@@ -232,8 +301,9 @@ export const accountsPage = {
       setTimeout(() => document.getElementById('acc-name').focus(), 50);
     });
     document.getElementById('btn-cancel-modal').addEventListener('click', () => modal.classList.add('hidden'));
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
-    form.addEventListener('submit', (e) => { e.preventDefault(); this.save(); });
+modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
+     form.addEventListener('submit', (e) => { e.preventDefault(); this.save(); });
+     document.getElementById('verify-modal').addEventListener('click', (e) => { if (e.target === document.getElementById('verify-modal')) document.getElementById('verify-modal').classList.add('hidden'); });
 
     document.querySelectorAll('#acc-type-chips .chip').forEach(btn => btn.addEventListener('click', () => {
       document.querySelectorAll('#acc-type-chips .chip').forEach(b => b.classList.remove('active'));
@@ -286,31 +356,36 @@ bindGlobalListenersOnce() {
      document.addEventListener('transactions:changed', () => this.loadData());
    },
 
-  async save() {
-    const name = document.getElementById('acc-name').value.trim();
-    const balance = parseFloat(document.getElementById('acc-balance').value) || 0;
-    if (!name) { showToast('Nama akun wajib diisi.', 'error'); return; }
+   async save() {
+     const name = document.getElementById('acc-name').value.trim();
+     const balance = parseFloat(document.getElementById('acc-balance').value) || 0;
+     if (!name) { showToast('Nama akun wajib diisi.', 'error'); return; }
 
-    const payload = {
-      name,
-      type: document.getElementById('acc-type').value,
-      initial_balance: balance,
-      current_balance: balance,
-    };
-    const id = document.getElementById('acc-id').value;
-    const submitBtn = document.querySelector('#account-form button[type="submit"]');
-    submitBtn.disabled = true;
-    try {
-      const { error } = id ? await accountService.update(id, payload) : await accountService.create(payload);
-      if (error) throw error;
-      document.getElementById('account-modal').classList.add('hidden');
-      showToast(id ? 'Akun diperbarui.' : 'Akun ditambahkan.', 'success');
-      await this.loadData();
-    } catch (err) {
-      console.error(err);
-      showToast('Gagal menyimpan akun.', 'error');
-    } finally {
-      submitBtn.disabled = false;
-    }
-  }
+     const now = new Date();
+     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+     const isEdit = !!document.getElementById('acc-id').value;
+
+     const payload = {
+       name,
+       type: document.getElementById('acc-type').value,
+       initial_balance: balance,
+       current_balance: balance,
+       ...(isEdit ? {} : { opening_balance: balance, opening_date: firstOfMonth.toISOString().split('T')[0] }),
+     };
+     const id = document.getElementById('acc-id').value;
+     const submitBtn = document.querySelector('#account-form button[type="submit"]');
+     submitBtn.disabled = true;
+     try {
+       const { error } = id ? await accountService.update(id, payload) : await accountService.create(payload);
+       if (error) throw error;
+       document.getElementById('account-modal').classList.add('hidden');
+       showToast(id ? 'Akun diperbarui.' : 'Akun ditambahkan.', 'success');
+       await this.loadData();
+     } catch (err) {
+       console.error(err);
+       showToast('Gagal menyimpan akun.', 'error');
+     } finally {
+       submitBtn.disabled = false;
+     }
+   },
 };
