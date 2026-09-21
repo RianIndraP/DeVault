@@ -18,14 +18,16 @@ export const app = {
   currentUser: null,
   unsubscribeAuth: null,
 
-  async init() {
-    console.log('[Finance Dashboard] Initializing...');
-    this.currentUser = await authService.getCurrentUser();
-    this.setupRouter();
-    this.renderLayout();
-    this.setupAuthListener();
-    await this.checkAuth();
-  },
+async init() {
+     console.log('[Finance Dashboard] Initializing...');
+     const savedTheme = localStorage.getItem('theme');
+     if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+     this.currentUser = await authService.getCurrentUser();
+     this.setupRouter();
+     this.renderLayout();
+     this.setupAuthListener();
+     await this.checkAuth();
+   },
 
   setupRouter() {
     const routes = {
@@ -45,9 +47,12 @@ export const app = {
     router.init(routes);
   },
 
-  renderLayout() {
-    const appEl = document.getElementById('app');
-    if (!appEl) return;
+renderLayout() {
+     const savedTheme = localStorage.getItem('theme');
+     if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+     else document.documentElement.classList.remove('dark');
+     const appEl = document.getElementById('app');
+     if (!appEl) return;
     if (!this.currentUser) {
       appEl.innerHTML = '<div id="page-container" style="background:var(--canvas); min-height:100vh;"></div>';
       router.resolve();

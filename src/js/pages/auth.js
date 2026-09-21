@@ -134,12 +134,13 @@ export const authPage = {
   attachEvents() {
     const $ = (sel) => document.querySelector(sel);
 
-    $('#auth-theme-btn').addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      const isDark = document.documentElement.classList.contains('dark');
-      $('#auth-icon-sun').classList.toggle('hidden', isDark);
-      $('#auth-icon-moon').classList.toggle('hidden', !isDark);
-    });
+$('#auth-theme-btn').addEventListener('click', () => {
+       document.documentElement.classList.toggle('dark');
+       const isDark = document.documentElement.classList.contains('dark');
+       localStorage.setItem('theme', isDark ? 'dark' : 'light');
+       $('#auth-icon-sun').classList.toggle('hidden', isDark);
+       $('#auth-icon-moon').classList.toggle('hidden', !isDark);
+     });
 
     $('#tab-login').addEventListener('click', () => this.setMode('login'));
     $('#tab-register').addEventListener('click', () => this.setMode('register'));
