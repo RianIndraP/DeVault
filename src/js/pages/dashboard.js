@@ -672,7 +672,7 @@ if (this.charts.budgetLine) this.charts.budgetLine.destroy();
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
       this.charts.budgetLine = new Chart(document.getElementById('budget-line-chart'), {
         type: 'line',
-        data: { labels: daily.labels, datasets: [{ label: 'Pengeluaran harian (Rp)', data: daily.values, borderColor: cCoral, backgroundColor: cCoral + '22', tension: 0, fill: true, pointRadius: 2, pointHoverRadius: 5 }] },
+        data: { labels: daily.labels, datasets: [{ label: 'Pengeluaran harian (Rp)', data: daily.values, borderColor: cCoral, tension: 0, pointRadius: 2, pointHoverRadius: 5 }] },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } } }
       });
    },
