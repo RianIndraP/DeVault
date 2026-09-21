@@ -355,9 +355,10 @@ if (tx) {
             }
           } catch (balErr) { console.warn('[Balance reverse]', balErr.message); }
         }
-        await this.loadData();
+await this.loadData();
         showToast('Transaksi berhasil dihapus.', 'success');
-     } catch (err) {
+        document.dispatchEvent(new CustomEvent('transactions:changed'));
+      } catch (err) {
       console.error(err);
       showToast('Gagal menghapus transaksi.', 'error');
     }
@@ -415,6 +416,7 @@ const id = document.getElementById('tx-id').value;
        document.getElementById('tx-modal').classList.add('hidden');
        await this.loadData();
        showToast(id ? 'Transaksi diperbarui.' : 'Transaksi ditambahkan.', 'success');
+       document.dispatchEvent(new CustomEvent('transactions:changed'));
      } catch (err) {
       console.error(err);
       showToast('Gagal menyimpan transaksi.', 'error');

@@ -276,14 +276,15 @@ export const accountsPage = {
 
   // Listener global (keydown Escape) dipasang sekali saja lewat flag ini,
   // supaya tidak menumpuk tiap kali halaman ini dibuka ulang.
-  bindGlobalListenersOnce() {
-    if (this._globalBound) return;
-    this._globalBound = true;
-    document.addEventListener('keydown', (e) => {
-      const modal = document.getElementById('account-modal');
-      if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
-    });
-  },
+bindGlobalListenersOnce() {
+     if (this._globalBound) return;
+     this._globalBound = true;
+     document.addEventListener('keydown', (e) => {
+       const modal = document.getElementById('account-modal');
+       if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+     });
+     document.addEventListener('transactions:changed', () => this.loadData());
+   },
 
   async save() {
     const name = document.getElementById('acc-name').value.trim();
