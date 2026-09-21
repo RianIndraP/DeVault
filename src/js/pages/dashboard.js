@@ -18,7 +18,7 @@ import { showToast } from '../components/toast.js';
 export const dashboardPage = {
   data: { accounts: [], transactions: [], categories: [], budgets: [], goals: [] },
   ui: { activeType: 'all', activeCategory: null, search: '', txType: 'expense' },
-  charts: { ie: null, daily: null, expMonth: null },
+  charts: { ie: null, daily: null, budgetLine: null },
   _globalListenersBound: false,
 
   async render() {
@@ -125,21 +125,21 @@ export const dashboardPage = {
          </div>
        </div>
 
-       <!-- EXPENSE PER MONTH -->
-       <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
-         <div class="lg:col-span-5 card card-hover rounded-2xl p-6">
-           <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
-             <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Pengeluaran per bulan</h3>
-             <div class="flex gap-1 text-xs">
-               <button class="exp-month-btn chip active" data-months="12">12 bulan</button>
-               <button class="exp-month-btn chip" data-months="6">6 bulan</button>
-               <button class="exp-month-btn chip" data-months="3">3 bulan</button>
-             </div>
-           </div>
-           <p class="text-sm mb-4" style="color:var(--ink-muted)">Berdasarkan seluruh riwayat transaksi pengeluaran</p>
-           <canvas id="exp-month-chart" height="200"></canvas>
-         </div>
-       </div>
+<!-- GARIS ANGGARAN -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
+          <div class="lg:col-span-5 card card-hover rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+              <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Garis Anggaran — Pengeluaran Harian</h3>
+              <div class="flex gap-1 text-xs">
+                <button class="budget-btn chip active" data-months="12">12 bulan</button>
+                <button class="budget-btn chip" data-months="6">6 bulan</button>
+                <button class="budget-btn chip" data-months="3">3 bulan</button>
+              </div>
+            </div>
+            <p class="text-sm mb-4" style="color:var(--ink-muted)">Berdasarkan pengeluaran harian dalam satu bulan</p>
+            <canvas id="budget-line-chart" height="200"></canvas>
+          </div>
+        </div>
 
        <!-- CATEGORY + PATTERN -->
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
@@ -309,6 +309,20 @@ return { labels, income, expense };
        const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
        labels.push(d.toLocaleDateString('id-ID', { month: 'short' }));
        data.push(map[k] || 0);
+     }
+     return { labels, data };
+   },
+
+   dailyExpenseTimeline(months) {
+     const now = new Date();
+     const data = [];
+     const labels = [];
+     for (let i = months * 30; i >= 0; i--) {
+       const d = new Date(now.getFullYear(), now.getMonth() - months, now.getDate() - i);
+       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+       const spent = this.data.transactions.filter(t => t.type === 'expense' && t.date === key).reduce((s, t) => s + Number(t.amount || 0), 0);
+       labels.push(d.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }));
+       data.push(spent);
      }
      return { labels, data };
    },
@@ -658,22 +672,22 @@ this.charts.daily = new Chart(document.getElementById('daily-chart'), {
        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
      });
 
-     if (this.charts.expMonth) this.charts.expMonth.destroy();
-     const exp12 = this.monthlyExpenses(12);
-     this.charts.expMonth = new Chart(document.getElementById('exp-month-chart'), {
+     if (this.charts.budgetLine) this.charts.budgetLine.destroy();
+     const timeline = this.dailyExpenseTimeline(12);
+     this.charts.budgetLine = new Chart(document.getElementById('budget-line-chart'), {
        type: 'line',
-       data: { labels: exp12.labels, datasets: [{ label: 'Pengeluaran (Rp juta)', data: exp12.data.map(v => v / 1000000), borderColor: cCoral, backgroundColor: cCoral + '22', tension: .35, fill: true, pointRadius: 4, pointBackgroundColor: cCoral, pointBorderColor: cCoral, pointHoverRadius: 6 }] },
-       options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+       data: { labels: timeline.labels, datasets: [{ label: 'Pengeluaran harian (Rp)', data: timeline.data, borderColor: cCoral, backgroundColor: cCoral + '22', tension: .4, fill: true, pointRadius: 2, pointHoverRadius: 5 }] },
+       options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } } }
      });
 
-     document.querySelectorAll('.exp-month-btn').forEach(btn => btn.addEventListener('click', () => {
-       document.querySelectorAll('.exp-month-btn').forEach(b => b.classList.remove('active'));
+     document.querySelectorAll('.budget-btn').forEach(btn => btn.addEventListener('click', () => {
+       document.querySelectorAll('.budget-btn').forEach(b => b.classList.remove('active'));
        btn.classList.add('active');
        const months = parseInt(btn.dataset.months);
-       const expData = this.monthlyExpenses(months);
-       this.charts.expMonth.data.labels = expData.labels;
-       this.charts.expMonth.data.datasets[0].data = expData.data.map(v => v / 1000000);
-       this.charts.expMonth.update();
+       const timelineData = this.dailyExpenseTimeline(months);
+       this.charts.budgetLine.data.labels = timelineData.labels;
+       this.charts.budgetLine.data.datasets[0].data = timelineData.data;
+       this.charts.budgetLine.update();
      }));
    },
 
