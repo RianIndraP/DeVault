@@ -341,20 +341,20 @@ async remove(id) {
        const { error } = await transactionService.delete(id);
        if (error) throw error;
 if (tx) {
-          try {
-            const accounts = await accountService.getAll();
-            const accId = tx.account_id;
-            const sign = tx.type === 'expense' ? -1 : tx.type === 'income' ? 1 : 0;
-            const acc = accounts.find(a => a.id === accId);
-            if (acc && sign !== 0) {
-              await accountService.updateBalance(accId, Number(acc.current_balance || 0) - (tx.amount * sign));
-            }
-            if (tx.type === 'transfer' && tx.account_to_id) {
-              const dstAcc = accounts.find(a => a.id === tx.account_to_id);
-              if (dstAcc) await accountService.updateBalance(tx.account_to_id, Number(dstAcc.current_balance || 0) + tx.amount);
-            }
-          } catch (balErr) { console.warn('[Balance reverse]', balErr.message); }
-        }
+           try {
+             const { data: accounts } = await accountService.getAll();
+             const accId = tx.account_id;
+             const sign = tx.type === 'expense' ? -1 : tx.type === 'income' ? 1 : 0;
+             const acc = accounts.find(a => a.id === accId);
+             if (acc && sign !== 0) {
+               await accountService.updateBalance(accId, Number(acc.current_balance || 0) - (tx.amount * sign));
+             }
+             if (tx.type === 'transfer' && tx.account_to_id) {
+               const dstAcc = accounts.find(a => a.id === tx.account_to_id);
+               if (dstAcc) await accountService.updateBalance(tx.account_to_id, Number(dstAcc.current_balance || 0) + tx.amount);
+             }
+           } catch (balErr) { console.warn('[Balance reverse]', balErr.message); }
+         }
 await this.loadData();
         showToast('Transaksi berhasil dihapus.', 'success');
         document.dispatchEvent(new CustomEvent('transactions:changed'));
@@ -386,7 +386,7 @@ async save() {
        showToast('Akun tujuan harus berbeda.', 'error'); return;
      }
 
-const id = document.getElementById('tx-id').value;
+     const id = document.getElementById('tx-id').value;
      const submitBtn = document.querySelector('#tx-form button[type="submit"]');
      submitBtn.disabled = true;
      try {
@@ -396,7 +396,7 @@ const id = document.getElementById('tx-id').value;
        const sign = payload.type === 'expense' ? -1 : payload.type === 'income' ? 1 : 0;
        if (sign !== 0 && accId) {
          try {
-           const accounts = await accountService.getAll();
+           const { data: accounts } = await accountService.getAll();
            const acc = accounts.find(a => a.id === accId);
            if (acc) {
              const newBalance = Number(acc.current_balance || 0) + (payload.amount * sign);
@@ -406,7 +406,7 @@ const id = document.getElementById('tx-id').value;
        }
        if (payload.type === 'transfer' && payload.account_id && payload.account_to_id) {
          try {
-           const accounts = await accountService.getAll();
+           const { data: accounts } = await accountService.getAll();
            const srcAcc = accounts.find(a => a.id === payload.account_id);
            const dstAcc = accounts.find(a => a.id === payload.account_to_id);
            if (srcAcc) await accountService.updateBalance(payload.account_id, Number(srcAcc.current_balance || 0) - payload.amount);
@@ -418,12 +418,12 @@ const id = document.getElementById('tx-id').value;
        showToast(id ? 'Transaksi diperbarui.' : 'Transaksi ditambahkan.', 'success');
        document.dispatchEvent(new CustomEvent('transactions:changed'));
      } catch (err) {
-      console.error(err);
-      showToast('Gagal menyimpan transaksi.', 'error');
-    } finally {
-      submitBtn.disabled = false;
-    }
-  },
+       console.error(err);
+       showToast('Gagal menyimpan transaksi.', 'error');
+     } finally {
+       submitBtn.disabled = false;
+     }
+   },
 
   exportExcel() {
     const data = this.getFiltered();
