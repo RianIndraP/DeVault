@@ -333,25 +333,27 @@ dailySeries() {
      return { labels: Array.from({ length: daysInMonth }, (_, i) => i + 1), values: totals };
    },
 
-   dailyFinancialTimeline() {
-     const now = new Date();
-     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-     const openingBalance = this.data.accounts.reduce((s, a) => s + Number(a.opening_balance || 0), 0);
-     const txs = this.data.transactions.filter(t => this.isThisMonth(t.date));
-     const income = Array(daysInMonth).fill(0);
-     const expense = Array(daysInMonth).fill(0);
-     const balance = Array(daysInMonth).fill(0);
-     let runningBalance = openingBalance;
-     for (let d = 1; d <= daysInMonth; d++) {
-       txs.filter(t => new Date(t.date).getDate() === d).forEach(t => {
-         if (t.type === 'income') { income[d - 1] += Number(t.amount || 0); runningBalance += Number(t.amount || 0); }
-         else if (t.type === 'expense') { expense[d - 1] += Number(t.amount || 0); runningBalance -= Number(t.amount || 0); }
-       });
-       balance[d - 1] = runningBalance;
-     }
-     const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-     return { labels, income, expense, balance };
-   },
+dailyFinancialTimeline() {
+      const now = new Date();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      const currentBalance = this.data.accounts.reduce((s, a) => s + Number(a.current_balance || 0), 0);
+      const txs = this.data.transactions.filter(t => this.isThisMonth(t.date));
+      const netThisMonth = txs.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0) - txs.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0);
+      const openingBalance = currentBalance - netThisMonth;
+      const income = Array(daysInMonth).fill(0);
+      const expense = Array(daysInMonth).fill(0);
+      const balance = Array(daysInMonth).fill(0);
+      let runningBalance = openingBalance;
+      for (let d = 1; d <= daysInMonth; d++) {
+        txs.filter(t => new Date(t.date).getDate() === d).forEach(t => {
+          if (t.type === 'income') { income[d - 1] += Number(t.amount || 0); runningBalance += Number(t.amount || 0); }
+          else if (t.type === 'expense') { expense[d - 1] += Number(t.amount || 0); runningBalance -= Number(t.amount || 0); }
+        });
+        balance[d - 1] = runningBalance;
+      }
+      const labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+      return { labels, income, expense, balance };
+    },
 
    categoryBreakdown() {
     const txThisMonth = this.data.transactions.filter(t => t.type === 'expense' && this.isThisMonth(t.date));
