@@ -130,13 +130,8 @@ export const dashboardPage = {
           <div class="lg:col-span-5 card card-hover rounded-2xl p-6">
             <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
               <h3 class="font-display text-lg font-semibold" style="color:var(--ink)">Garis Anggaran — Pengeluaran Harian</h3>
-              <div class="flex gap-1 text-xs">
-                <button class="budget-btn chip active" data-months="12">12 bulan</button>
-                <button class="budget-btn chip" data-months="6">6 bulan</button>
-                <button class="budget-btn chip" data-months="3">3 bulan</button>
-              </div>
             </div>
-            <p class="text-sm mb-4" style="color:var(--ink-muted)">Berdasarkan pengeluaran harian dalam satu bulan</p>
+            <p class="text-sm mb-4" style="color:var(--ink-muted)">Berdasarkan pengeluaran harian dalam bulan ini saja</p>
             <canvas id="budget-line-chart" height="200"></canvas>
           </div>
         </div>
@@ -673,22 +668,14 @@ this.charts.daily = new Chart(document.getElementById('daily-chart'), {
      });
 
      if (this.charts.budgetLine) this.charts.budgetLine.destroy();
-     const timeline = this.dailyExpenseTimeline(12);
+     const now = new Date();
+     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+     const timeline = this.dailyExpenseTimeline(1);
      this.charts.budgetLine = new Chart(document.getElementById('budget-line-chart'), {
        type: 'line',
-       data: { labels: timeline.labels, datasets: [{ label: 'Pengeluaran harian (Rp)', data: timeline.data, borderColor: cCoral, backgroundColor: cCoral + '22', tension: .4, fill: true, pointRadius: 2, pointHoverRadius: 5 }] },
+       data: { labels: timeline.labels.slice(-daysInMonth), datasets: [{ label: 'Pengeluaran harian (Rp)', data: timeline.data.slice(-daysInMonth), borderColor: cCoral, backgroundColor: cCoral + '22', tension: .4, fill: true, pointRadius: 2, pointHoverRadius: 5 }] },
        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } } }
      });
-
-     document.querySelectorAll('.budget-btn').forEach(btn => btn.addEventListener('click', () => {
-       document.querySelectorAll('.budget-btn').forEach(b => b.classList.remove('active'));
-       btn.classList.add('active');
-       const months = parseInt(btn.dataset.months);
-       const timelineData = this.dailyExpenseTimeline(months);
-       this.charts.budgetLine.data.labels = timelineData.labels;
-       this.charts.budgetLine.data.datasets[0].data = timelineData.data;
-       this.charts.budgetLine.update();
-     }));
    },
 
   observeBars() {
