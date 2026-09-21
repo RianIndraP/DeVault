@@ -334,14 +334,28 @@ export const transactionsPage = {
     modal.classList.remove('hidden'); modal.classList.add('flex');
   },
 
-  async remove(id) {
-    if (!confirm('Hapus transaksi ini?')) return;
-    try {
-      const { error } = await transactionService.delete(id);
-      if (error) throw error;
-      await this.loadData();
-      showToast('Transaksi berhasil dihapus.', 'success');
-    } catch (err) {
+async remove(id) {
+     if (!confirm('Hapus transaksi ini?')) return;
+     try {
+       const tx = this.data.transactions.find(t => t.id === id);
+       const { error } = await transactionService.delete(id);
+       if (error) throw error;
+       if (tx) {
+         const accounts = await accountService.getAll();
+         const accId = tx.account_id;
+         const sign = tx.type === 'expense' ? -1 : tx.type === 'income' ? 1 : 0;
+         const acc = accounts.find(a => a.id === accId);
+         if (acc && sign !== 0) {
+           await accountService.updateBalance(accId, Number(acc.current_balance || 0) - (tx.amount * sign));
+         }
+         if (tx.type === 'transfer' && tx.account_to_id) {
+           const dstAcc = accounts.find(a => a.id === tx.account_to_id);
+           if (dstAcc) await accountService.updateBalance(tx.account_to_id, Number(dstAcc.current_balance || 0) + tx.amount);
+         }
+       }
+       await this.loadData();
+       showToast('Transaksi berhasil dihapus.', 'success');
+     } catch (err) {
       console.error(err);
       showToast('Gagal menghapus transaksi.', 'error');
     }
@@ -372,13 +386,30 @@ async save() {
     const id = document.getElementById('tx-id').value;
     const submitBtn = document.querySelector('#tx-form button[type="submit"]');
     submitBtn.disabled = true;
-    try {
-      const { error } = id ? await transactionService.update(id, payload) : await transactionService.create(payload);
-      if (error) throw error;
-      document.getElementById('tx-modal').classList.add('hidden');
-      await this.loadData();
-      showToast(id ? 'Transaksi diperbarui.' : 'Transaksi ditambahkan.', 'success');
-    } catch (err) {
+try {
+       const { error } = id ? await transactionService.update(id, payload) : await transactionService.create(payload);
+       if (error) throw error;
+       const accId = payload.type === 'transfer' ? payload.account_to_id : payload.account_id;
+       const sign = payload.type === 'expense' ? -1 : payload.type === 'income' ? 1 : 0;
+       if (sign !== 0 && accId) {
+         const accounts = await accountService.getAll();
+         const acc = accounts.find(a => a.id === accId);
+         if (acc) {
+           const newBalance = Number(acc.current_balance || 0) + (payload.amount * sign);
+           await accountService.updateBalance(accId, newBalance);
+         }
+       }
+       if (payload.type === 'transfer' && payload.account_id && payload.account_to_id) {
+         const accounts = await accountService.getAll();
+         const srcAcc = accounts.find(a => a.id === payload.account_id);
+         const dstAcc = accounts.find(a => a.id === payload.account_to_id);
+         if (srcAcc) await accountService.updateBalance(payload.account_id, Number(srcAcc.current_balance || 0) - payload.amount);
+         if (dstAcc) await accountService.updateBalance(payload.account_to_id, Number(dstAcc.current_balance || 0) + payload.amount);
+       }
+       document.getElementById('tx-modal').classList.add('hidden');
+       await this.loadData();
+       showToast(id ? 'Transaksi diperbarui.' : 'Transaksi ditambahkan.', 'success');
+     } catch (err) {
       console.error(err);
       showToast('Gagal menyimpan transaksi.', 'error');
     } finally {
