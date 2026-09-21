@@ -182,9 +182,11 @@ async loadData() {
        await accountService.update(acc.id, updates);
        await this.loadData();
        showToast(adjustVal !== 0 ? 'Saldo disesuaikan dengan penyesuaian.' : 'Saldo awal diverifikasi.', 'success');
-     };
-   },
-    let list = [...this.data];
+};
+    },
+
+   getFiltered() {
+     let list = [...this.data];
     if (this.filterType !== 'all') list = list.filter(a => a.type === this.filterType);
     if (this.search) {
       const q = this.search.toLowerCase();
