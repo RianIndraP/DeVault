@@ -667,15 +667,14 @@ this.charts.daily = new Chart(document.getElementById('daily-chart'), {
        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
      });
 
-     if (this.charts.budgetLine) this.charts.budgetLine.destroy();
-     const now = new Date();
-     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-     const timeline = this.dailyExpenseTimeline(1);
-     this.charts.budgetLine = new Chart(document.getElementById('budget-line-chart'), {
-       type: 'line',
-       data: { labels: timeline.labels.slice(-daysInMonth), datasets: [{ label: 'Pengeluaran harian (Rp)', data: timeline.data.slice(-daysInMonth), borderColor: cCoral, backgroundColor: cCoral + '22', tension: .4, fill: true, pointRadius: 2, pointHoverRadius: 5 }] },
-       options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } } }
-     });
+if (this.charts.budgetLine) this.charts.budgetLine.destroy();
+      const now = new Date();
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      this.charts.budgetLine = new Chart(document.getElementById('budget-line-chart'), {
+        type: 'line',
+        data: { labels: daily.labels, datasets: [{ label: 'Pengeluaran harian (Rp)', data: daily.values, borderColor: cCoral, backgroundColor: cCoral + '22', tension: .4, fill: true, pointRadius: 2, pointHoverRadius: 5 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false }, ticks: { maxTicksLimit: 15 } } } }
+      });
    },
 
   observeBars() {
