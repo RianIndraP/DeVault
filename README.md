@@ -38,8 +38,8 @@ personal-finance-dashboard/
 ├── package-lock.json       ← Lock file dependency
 ├── vite.config.js          ← Konfigurasi Vite (PostCSS + Tailwind v4)
 ├── postcss.config.js       ← PostCSS config (@tailwindcss/postcss)
-├── vercel.json             ← Vercel deployment config
 ├── database.sql            ← Schema SQL Supabase (9 tabel + RLS + triggers)
+├── opencode.json           ← Plugin @dietrichgebert/ponytail (YAGNI/stdlib/native rules)
 ├── public/                 ← File statis (favicon)
 ├── dist/                   ← Build output
 └── src/
@@ -121,7 +121,7 @@ File konfigurasi:
 ### Database Schema
 9 tabel dengan RLS lengkap:
 - `profiles` — Profil pengguna (id = auth.uid())
-- `accounts` — Sumber uang (bank, e-wallet, cash, other)
+- `accounts` — Sumber uang (bank, e-wallet, cash, other) dengan opening_balance dan opening_date untuk verifikasi saldo bulanan
 - `categories` — Kategori transaksi buatan pengguna (icon: SVG path string, bukan emoji)
 - `transactions` — Catatan transaksi utama (income, expense, transfer, adjustment)
 - `transaction_items` — Detail item per transaksi expense
@@ -165,7 +165,11 @@ Profil otomatis dibuat saat user baru mendaftar. `profiles.id` = `auth.uid()` me
 - **Layout**: app.js pakai background:var(--canvas), margin-left:250px untuk sidebar alignment
 - **Components**: sidebar.js, topbar.js pakai CSS variables (bukan Tailwind gray classes)
 - **Sidebar**: updateUser(displayName), attachEvents(), setOpen(open), logout() methods
-- **Dashboard**: hero gradient, health gauge SVG, Chart.js charts, category breakdown, spending pattern, activity feed, budget status, goals, insights, modal transaksi, toast, global events (search:changed, theme:changed, keydown:Escape)
+- **Dashboard**: hero gradient, health gauge SVG, multi-series line chart (Pemasukan/Pengeluaran/Saldo), category breakdown, spending pattern, activity feed, budget status, goals, insights, modal transaksi, toast, global events (search:changed, theme:changed, keydown:Escape)
+- **Garis Anggaran**: multi-series line chart (3 garis: Pemasukan 🟢, Pengeluaran 🔴, Saldo 🔵), garis lurus (tension:0), tanpa area fill, tooltip hover per hari
+- **Saldo Awal Bulanan**: Verifikasi saldo di halaman Akun saat tanggal 1 setiap bulan, modal konfirmasi, penyesuaian dicatat sebagai transaksi adjustment
+- **Tema**: localStorage + renderLayout() apply theme dari localStorage setiap render, auth.js theme toggle juga menyimpan ke localStorage
+- **Tutorial Panel**: scrollable jika konten kepanjangan (overflow-y-auto)
 - **Animations**: .slide-in, .fade-out, .card-hover, .btn-press keyframes di index.css
 - **Chart.js**: CDN di index.html, responsive charts dengan CSS variabel colors, empty data handling, period toggle (3/6 bulan)
 - **Global Events**: document.addEventListener untuk search:changed, theme:changed, keydown:Escape
@@ -276,10 +280,19 @@ user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL
 name TEXT NOT NULL
 type TEXT CHECK (type IN ('bank', 'e_wallet', 'cash', 'other'))
 initial_balance DECIMAL(15,2) DEFAULT 0
+opening_balance DECIMAL(15,2) DEFAULT 0    ← saldo awal bulan berjalan
 current_balance DECIMAL(15,2) DEFAULT 0
+opening_date DATE                          ← tanggal mulai berlaku opening_balance
 created_at TIMESTAMPTZ
 updated_at TIMESTAMPTZ
 ```
+
+**Fitur saldo awal bulanan:**
+- Saat akun dibuat, `opening_balance` dan `opening_date` diisi otomatis
+- Pada tanggal 1 setiap bulan, halaman Akun menampilkan **modal verifikasi saldo**
+- Modal menampilkan saldo yang dihitung dan meminta konfirmasi
+- Jika saldo berbeda, pengguna dapat menyesuaikan (dicatat sebagai transaksi `adjustment`)
+- `current_balance` dihitung dari `opening_balance + transaksi bulan ini`
 
 ### categories
 ```
@@ -428,8 +441,6 @@ Proprietary - Personal Use
 - categories.js kini menggunakan icon() dari icons.js (SVG path) bukan emoji
 - categories.js, accounts.js, transactions.js sudah punya tutorialPanel.setContent() spesifik per halaman
 - src/js/store/ dan src/js/utils/ adalah direktori kosong yang dicadangkan untuk state management dan utils modular di masa depan
-- login.html adalah file HTML standalone untuk halaman login/register, menggunakan Tailwind CDN dan CSS inline
-- target.html adalah file HTML standalone untuk halaman target tabungan, menggunakan Tailwind CDN, sidebar, dan icon inline
 - src/js/app.js — route /recurring terdaftar, import recurringPage sudah ditambahkan
 - src/js/pages/budgets.js — current_amount dihitung dari transaksi (import transactionService), isThisMonth() method ditambahkan
 - src/js/pages/dashboard.js — health-info-modal, warna net dinamis (emerald/coral), renderBudgets handle null category_id
@@ -437,8 +448,19 @@ Proprietary - Personal Use
 - src/js/components/icons.js — tambah icon file (PDF export) dan camera (OCR receipt scan)
 
 ## Perubahan Terakhir
-- **7118796** — fix: budget NaN%, recurring /recurring route, icon file/camera, net color fix, health info modal, transactions month/year payload
-- **login.html** & **target.html** — standalone HTML files dibuat untuk preview editing
+- **cb5649a** — feat: tutorial panel scrollable (max-height:100vh, overflow:hidden), theme persist di renderLayout() setiap render
+- **cdd4af0** — fix: null guard showAlert/hideAlert jika form-alert tidak ada di DOM
+- **fb4add8** — fix: tema tidak tersimpan — apply theme dari localStorage di renderLayout() dan auth.js theme toggle
+- **8e03c15** — fix: Line Chart tanpa fill, garis lurus seperti ogive (tension:0, tanpa fill)
+- **cd1a5a4** — feat: Multi-series line chart: Pemasukan 🟢, Pengeluaran 🔴, Saldo 🔵 per hari
+- **848e63b** — fix: Saldo chart dimulai dari currentBalance - netThisMonth, bukan opening_balance
+- **41ed400** — fix: Garis Anggaran pakai dailySeries() untuk tampilkan 1-akhir bulan
+- **4754548** — feat: Tambah field opening_balance dan opening_date ke tabel accounts, modal verifikasi saldo bulanan di halaman Akun
+- **64783af** — fix: destructuring { data } dari accountService.getAll(), perbaiki indentasi
+- **60ad9a0** — fix: add try-catch balance update, proper indentation
+- **9a9d257** — fix: update account current_balance on transaction create/delete
+- **5f1990a** — fix: add missing getFiltered() method declaration (syntax error)
+- **login.html** & **target.html** — standalone HTML files sudah dihapus dari proyek
 - **icons.js** — tambah icon file (PDF export) dan camera (OCR receipt scan)
 
 ## Git History
