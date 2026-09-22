@@ -229,21 +229,23 @@ $('#auth-theme-btn').addEventListener('click', () => {
     document.querySelectorAll('.field-error-text').forEach(t => { t.classList.add('hidden'); t.textContent = ''; });
   },
 
-  showAlert(type, message) {
-    const tone = type === 'success' ? 'emerald' : type === 'error' ? 'coral' : 'indigo';
-    const iconKey = type === 'success' ? 'check' : type === 'error' ? 'warning' : 'info';
-    const alertEl = document.getElementById('form-alert');
-    alertEl.style.background = `var(--${tone}-soft)`;
-    alertEl.style.color = `var(--${tone})`;
-    alertEl.innerHTML = `<span class="shrink-0">${icon(iconKey, 'w-4 h-4')}</span><span>${message}</span>`;
-    alertEl.classList.remove('hidden');
-  },
+showAlert(type, message) {
+     const tone = type === 'success' ? 'emerald' : type === 'error' ? 'coral' : 'indigo';
+     const iconKey = type === 'success' ? 'check' : type === 'error' ? 'warning' : 'info';
+     const alertEl = document.getElementById('form-alert');
+     if (!alertEl) return;
+     alertEl.style.background = `var(--${tone}-soft)`;
+     alertEl.style.color = `var(--${tone})`;
+     alertEl.innerHTML = `<span class="shrink-0">${icon(iconKey, 'w-4 h-4')}</span><span>${message}</span>`;
+     alertEl.classList.remove('hidden');
+   },
 
-  hideAlert() {
-    const alertEl = document.getElementById('form-alert');
-    alertEl.classList.add('hidden');
-    alertEl.innerHTML = '';
-  },
+hideAlert() {
+     const alertEl = document.getElementById('form-alert');
+     if (!alertEl) return;
+     alertEl.classList.add('hidden');
+     alertEl.innerHTML = '';
+   },
 
   validate() {
     this.clearFieldErrors();
