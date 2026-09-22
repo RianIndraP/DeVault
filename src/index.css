@@ -84,7 +84,7 @@ body{ background:var(--canvas); color:var(--ink); font-family:'Inter',sans-serif
 .toast-info{ background:var(--indigo); }
 
 /* ---------- panel tutorial (kanan) ---------- */
-#tutorial-panel{ display:flex; flex-direction:column; position:fixed; inset-y:0; right:0; z-index:30; width:300px; background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .2s ease; }
+#tutorial-panel{ display:flex; flex-direction:column; position:fixed; inset-y:0; right:0; z-index:30; width:300px; max-height:100vh; overflow:hidden; background:var(--surface); border-left:1px solid var(--border); transform:translateX(100%); transition:transform .2s ease; }
 @media(min-width:1280px){ #tutorial-panel{ transform:translateX(0); } }
 #tutorial-panel.open{ transform:translateX(0); }
 #tutorial-backdrop{ position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.4); display:none; }
