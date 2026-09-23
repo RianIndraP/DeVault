@@ -875,7 +875,7 @@ export const dashboardPage = {
           <div class="flex justify-between"><span>Pemasukan</span><span class="font-semibold" style="color:var(--ink)">${rupiah(totals.income)}</span></div>
           <div class="flex justify-between"><span>Pengeluaran</span><span class="font-semibold" style="color:var(--ink)">${rupiah(totals.expense)}</span></div>
           <div class="flex justify-between"><span>Net (Pemasukan − Pengeluaran)</span><span class="font-semibold" style="color:var(--ink)">${rupiah(totals.net)}</span></div>
-          <div class="flex justify-between border-t pt-2" style="border-color:var(--border)"><span>SavingsScore</span><span class="font-semibold" style="color:var(--ink)">${savingsScore.toFixed(1)} (${totals.savings}%)</span></div>
+          <div class="flex justify-between border-t pt-2" style="border-color:var(--border)"><span>SavingsScore</span><span class="font-semibold" style="color:var(--ink)">${savingsScore.toFixed(0)} / 100 ${totals.savings < 0 ? '(negatif)' : '(' + totals.savings + '%)'}</span></div>
           <div class="flex justify-between"><span>BudgetScore (overage rata-rata: ${overage.toFixed(1)}%)</span><span class="font-semibold" style="color:var(--ink)">${budgetScore.toFixed(1)}</span></div>
           <div class="flex justify-between border-t pt-2" style="border-color:var(--border)"><span class="font-semibold" style="color:var(--ink)">Skor Akhir</span><span class="font-display text-lg font-bold" style="color:var(--indigo)">${score} / 100</span></div>
         </div>
