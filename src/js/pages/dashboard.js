@@ -225,7 +225,7 @@ export const dashboardPage = {
     `;
 
     await this.loadData();
-    this.renderAll();
+    if (!this.renderAll()) return;
     this.attachEvents();
     this.bindGlobalListenersOnce();
     this.setTutorial();
@@ -429,6 +429,7 @@ export const dashboardPage = {
 
   // ---------- render ----------
   renderAll() {
+    if (!document.getElementById('stat-net')?.isConnected) return false;
     const totals = this.totals();
     this.renderHero(totals);
     this.renderAccounts();
@@ -440,6 +441,7 @@ export const dashboardPage = {
     this.renderInsights(totals);
     this.renderCharts();
     this.observeBars();
+    return true;
   },
 
   countUp(el, to, { prefix = '', suffix = '' } = {}) {
@@ -923,7 +925,7 @@ export const dashboardPage = {
       const { error } = await transactionService.create(payload);
       if (error) throw error;
       await this.loadData();
-      this.renderAll();
+      if (!this.renderAll()) return;
       this.closeModal();
       showToast('Transaksi ditambahkan.', 'success');
     } catch (err) {

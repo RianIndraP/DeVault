@@ -27,9 +27,15 @@ export const ICON_PATHS = {
   close: '<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>',
   chevronLeft: '<path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/>',
   chevronRight: '<path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>',
+  chevronDown: '<path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>',
+  moreVertical: '<circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.2 4.2l1.4 1.4m12.8 12.8l1.4 1.4M2 12h2m16 0h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/>',
   moon: '<path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/>',
   plus: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>',
+  check: '<path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path stroke-linecap="round" d="M12 8h.01M11 12h1v4h1"/>',
+  eye: '<path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18M10.6 10.6a3 3 0 004.2 4.2M9.5 5.3A9.9 9.9 0 0112 5c6 0 9.5 7 9.5 7a13.6 13.6 0 01-3.2 4.1M6.4 6.4C4 8 2.5 12 2.5 12a13.7 13.7 0 004.2 5"/>',
 
   // ---- account types ----
   bank: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 10l9-6 9 6M4 10v9m4-9v9m4-9v9m4-9v9M2 21h20"/>',
@@ -54,6 +60,11 @@ export const ICON_PATHS = {
   // ---- goals ----
   laptop: '<path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v10H4zM2 19h20M9 19v-2m6 2v-2"/>',
   shield: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  car: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 13l1.5-5A2 2 0 016.4 6.5h11.2A2 2 0 0119.5 8L21 13M4 13h16v5a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-5z"/><circle cx="7.5" cy="16.5" r="1.2"/><circle cx="16.5" cy="16.5" r="1.2"/>',
+  home: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 11l9-7 9 7M5 10v10h14V10"/>',
+  plane: '<path stroke-linecap="round" stroke-linejoin="round" d="M10.5 20l1.5-5 7-5-1-2-8 2-3-3-2 .5 2 4-4 2v2l4-1 1 3z"/>',
+  ring: '<circle cx="9" cy="16" r="4"/><circle cx="17" cy="16" r="4"/><path stroke-linecap="round" d="M12 12l2-8"/>',
+  grad: '<path stroke-linecap="round" stroke-linejoin="round" d="M22 10L12 5 2 10l10 5 10-5zM6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>',
 
   // ---- insight icons ----
   warning: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9L2.7 17a2 2 0 001.7 3h15.2a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>',
