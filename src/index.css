@@ -4,7 +4,7 @@
    Design tokens Dompetku — sumber: mockup HTML (versi indigo)
    ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
+
 
 :root{
   --canvas:#F6F5F1;
@@ -39,8 +39,8 @@ html.dark{
 
 *{ transition: background-color .25s ease, border-color .25s ease, color .25s ease; }
 button { cursor: pointer; }
-body{ background:var(--canvas); color:var(--ink); font-family:'Inter',sans-serif; }
-.font-display{ font-family:'Fraunces',serif; }
+body{ background:var(--canvas); color:var(--ink); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+.font-display{ font-family:Georgia,'Times New Roman',serif; }
 ::-webkit-scrollbar{ width:8px; height:8px; }
 ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:99px; }
 .focus-ring:focus-visible{ outline:2px solid var(--indigo); outline-offset:2px; }

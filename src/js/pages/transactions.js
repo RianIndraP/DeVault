@@ -2,7 +2,8 @@ import { transactionService, accountService, categoryService } from '../services
 import { icon } from '../components/icons.js';
 import { showToast } from '../components/toast.js';
 import { tutorialPanel } from '../components/tutorial.js';
-import { rupiah, withAlpha, categoryIcon, accountTypeLabel } from '../utils.js';
+import { bindTransactionModal, closeTransactionModal, fillTransactionModal, openTransactionModal, transactionModalHtml } from '../components/transaction_modal.js';
+import { rupiah, withAlpha, categoryIcon } from '../utils.js';
 
 // ⚠️ CATATAN: save()/delete() memanggil transactionService.create()/.update()/
 // .delete() — samakan namanya dengan database.js aslimu kalau berbeda.
@@ -138,51 +139,7 @@ export const transactionsPage = {
         <div id="pagination" class="flex items-center justify-between px-5 py-3 text-xs flex-wrap gap-2" style="color:var(--ink-muted); border-top:1px solid var(--border)"></div>
       </div>
 
-      <!-- MODAL TAMBAH/EDIT -->
-      <div id="tx-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-        <form id="tx-form" class="rounded-2xl p-6 w-full max-w-md card">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-bold font-display" id="modal-title" style="color:var(--ink)">Tambah Transaksi</h3>
-            <button type="button" id="btn-cancel-modal" class="p-1.5 rounded-lg btn-press" style="color:var(--ink-muted)">${icon('close', 'w-5 h-5')}</button>
-          </div>
-          <input type="hidden" id="tx-id" />
-          <div class="space-y-3.5">
-            <div>
-              <label class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Tipe</label>
-              <select id="tx-type" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)">
-                <option value="income">Pemasukan</option><option value="expense">Pengeluaran</option><option value="transfer">Transfer</option>
-              </select>
-            </div>
-            <div id="tx-category-wrap">
-              <label class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Kategori</label>
-              <select id="tx-category" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)"></select>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label id="tx-account-label" class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Akun</label>
-                <select id="tx-account" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)"></select>
-              </div>
-              <div id="tx-account-to-wrap" class="hidden">
-                <label class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Ke akun</label>
-                <select id="tx-account-to" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)"></select>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Tanggal</label>
-              <input type="date" id="tx-date" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)" />
-            </div>
-            <div>
-              <label class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Transaksi</label>
-              <input type="text" id="tx-desc" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)" placeholder="Cth. Makan siang" />
-            </div>
-            <div>
-              <label class="block text-xs font-medium mb-1" style="color:var(--ink-muted)">Nominal (Rp)</label>
-              <input type="number" id="tx-amount" min="1" class="w-full px-3 py-2 rounded-lg text-sm focus-ring" style="border:1px solid var(--border); background:var(--surface-alt); color:var(--ink)" placeholder="0" />
-            </div>
-          </div>
-          <button type="submit" class="w-full mt-5 py-2.5 rounded-lg text-white font-semibold focus-ring btn-press text-sm" style="background:var(--indigo)">Simpan transaksi</button>
-        </form>
-      </div>
+      ${transactionModalHtml()}
 
       <!-- MODAL KONFIRMASI HAPUS -->
       <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
@@ -236,7 +193,7 @@ export const transactionsPage = {
     this.data.accounts = accounts || [];
     this.data.categories = categories || [];
     this.fillFilterOptions();
-    this.fillModalSelects();
+    fillTransactionModal(this.data.categories, this.data.accounts);
     this.fillBulkCategoryOptions();
     this.renderRows();
   },
@@ -252,16 +209,6 @@ export const transactionsPage = {
       accSel.innerHTML = '<option value="all">Semua akun</option>' + this.data.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
       accSel.value = this.filters.account;
     }
-  },
-
-  fillModalSelects() {
-    const catSel = document.getElementById('tx-category');
-    const accSel = document.getElementById('tx-account');
-    const accToSel = document.getElementById('tx-account-to');
-    if (catSel) catSel.innerHTML = this.data.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    const accOpts = this.data.accounts.map(a => `<option value="${a.id}">${a.name} (${accountTypeLabel(a.type)})</option>`).join('');
-    if (accSel) accSel.innerHTML = accOpts;
-    if (accToSel) accToSel.innerHTML = accOpts;
   },
 
   fillBulkCategoryOptions() {
@@ -459,26 +406,14 @@ export const transactionsPage = {
 
   // ---------- events ----------
   attachEvents() {
-    const modal = document.getElementById('tx-modal');
-    const openBtn = document.getElementById('btn-add-transaction');
-    const cancelBtn = document.getElementById('btn-cancel-modal');
-    const form = document.getElementById('tx-form');
-    const typeSelect = document.getElementById('tx-type');
-
-    openBtn.addEventListener('click', () => {
-      if (!this.data.accounts.length) { showToast('Buat akun dulu sebelum menambah transaksi.', 'error'); return; }
-      document.getElementById('modal-title').textContent = 'Tambah Transaksi';
-      document.getElementById('tx-id').value = '';
-      form.reset();
-      document.getElementById('tx-date').value = new Date().toISOString().slice(0, 10);
-      typeSelect.value = 'income';
-      this.syncTxTypeFields('income');
-      modal.classList.remove('hidden'); modal.classList.add('flex');
+    bindTransactionModal({
+      onBeforeOpen: () => {
+        if (this.data.accounts.length) return true;
+        showToast('Buat akun dulu sebelum menambah transaksi.', 'error');
+        return false;
+      },
+      onSubmit: (payloads) => this.save(payloads)
     });
-    cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
-    typeSelect.addEventListener('change', (e) => this.syncTxTypeFields(e.target.value));
-    form.addEventListener('submit', (e) => { e.preventDefault(); this.save(); });
 
     // search
     document.getElementById('tx-search').addEventListener('input', (e) => {
@@ -597,34 +532,16 @@ export const transactionsPage = {
     this._searchBound = true;
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
-      const modal = document.getElementById('tx-modal');
-      if (modal && !modal.classList.contains('hidden')) modal.classList.add('hidden');
+      closeTransactionModal();
       this.closeDrawer();
       this.closeConfirm();
     });
   },
 
-  syncTxTypeFields(type) {
-    document.getElementById('tx-category-wrap').classList.toggle('hidden', type !== 'expense');
-    document.getElementById('tx-account-to-wrap').classList.toggle('hidden', type !== 'transfer');
-    document.getElementById('tx-account-label').textContent = type === 'transfer' ? 'Dari akun' : 'Akun';
-  },
-
   openEdit(id) {
     const tx = this.data.transactions.find(t => t.id === id);
     if (!tx) return;
-    document.getElementById('modal-title').textContent = 'Edit Transaksi';
-    document.getElementById('tx-id').value = tx.id;
-    document.getElementById('tx-type').value = tx.type;
-    this.syncTxTypeFields(tx.type);
-    document.getElementById('tx-account').value = tx.account_id || '';
-    if (tx.account_to_id) document.getElementById('tx-account-to').value = tx.account_to_id;
-    if (tx.category_id) document.getElementById('tx-category').value = tx.category_id;
-    document.getElementById('tx-date').value = (tx.date || '').slice(0, 10);
-    document.getElementById('tx-desc').value = tx.description || '';
-    document.getElementById('tx-amount').value = tx.amount;
-    const modal = document.getElementById('tx-modal');
-    modal.classList.remove('hidden'); modal.classList.add('flex');
+    openTransactionModal(tx);
   },
 
   // ---------- detail drawer ----------
@@ -812,52 +729,41 @@ export const transactionsPage = {
     }
   },
 
-  async save() {
-    const type = document.getElementById('tx-type').value;
-    const dateVal = document.getElementById('tx-date').value;
-    const [year, month] = dateVal ? [parseInt(dateVal.split('-')[0]), parseInt(dateVal.split('-')[1])] : [new Date().getFullYear(), new Date().getMonth() + 1];
-    const payload = {
-      type,
-      account_id: document.getElementById('tx-account').value,
-      ...(type === 'transfer' ? { account_to_id: document.getElementById('tx-account-to').value } : {}),
-      category_id: type === 'expense' ? document.getElementById('tx-category').value : null,
-      date: dateVal,
-      description: document.getElementById('tx-desc').value.trim(),
-      amount: parseFloat(document.getElementById('tx-amount').value),
-      month, year,
-      source: 'manual'
-    };
-    if (!payload.date || !payload.description || !payload.amount || payload.amount <= 0 || !payload.account_id) {
-      showToast('Lengkapi semua kolom.', 'error'); return;
-    }
-    if (type === 'transfer' && payload.account_id === payload.account_to_id) {
-      showToast('Akun tujuan harus berbeda.', 'error'); return;
-    }
-
-    const id = document.getElementById('tx-id').value;
+  async save(payloads = []) {
     const submitBtn = document.querySelector('#tx-form button[type="submit"]');
-    submitBtn.disabled = true;
+    if (!payloads.length) return;
+    if (submitBtn) submitBtn.disabled = true;
     try {
-      if (id) {
-        const oldTx = this.data.transactions.find(t => t.id === id);
-        const { error } = await transactionService.update(id, payload);
-        if (error) throw error;
-        if (oldTx) await this.reverseTransactionBalance(oldTx);
-        await this.applyTransactionBalance(payload);
-      } else {
-        const { error } = await transactionService.create(payload);
-        if (error) throw error;
-        await this.applyTransactionBalance(payload);
+      for (const payload of payloads) {
+        if (!payload.account_id || !payload.date || !payload.description || !payload.amount || payload.amount <= 0) {
+          throw new Error('Data transaksi tidak lengkap.');
+        }
+        if (payload.type === 'transfer' && payload.account_id === payload.account_to_id) {
+          throw new Error('Akun tujuan harus berbeda.');
+        }
+        if (payload.id) {
+          const { id, ...updates } = payload;
+          const oldTx = this.data.transactions.find(t => t.id === id);
+          const { error } = await transactionService.update(id, updates);
+          if (error) throw error;
+          if (oldTx) await this.reverseTransactionBalance(oldTx);
+          await this.applyTransactionBalance(updates);
+        } else {
+          const { error } = await transactionService.create(payload);
+          if (error) throw error;
+          await this.applyTransactionBalance(payload);
+        }
       }
-      document.getElementById('tx-modal').classList.add('hidden');
+      closeTransactionModal();
       await this.loadData();
-      showToast(id ? 'Transaksi diperbarui.' : 'Transaksi ditambahkan.', 'success');
+      const edited = payloads.length === 1 && payloads[0].id;
+      showToast(edited ? 'Transaksi diperbarui.' : `${payloads.length} transaksi ditambahkan.`, 'success');
       document.dispatchEvent(new CustomEvent('transactions:changed'));
     } catch (err) {
       console.error(err);
-      showToast('Gagal menyimpan transaksi.', 'error');
+      showToast(err.message || 'Gagal menyimpan transaksi.', 'error');
     } finally {
-      submitBtn.disabled = false;
+      if (submitBtn) submitBtn.disabled = false;
     }
   },
 
